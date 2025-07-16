@@ -1,0 +1,20 @@
+﻿@page
+@model ServiceFinder.Pages.Admin.Services.IndexModel
+
+@{
+    ViewData["Title"] = "Manage Services";
+    ViewData["PageMode"] = "Admin List";
+    var backPartialModel = new Data.InputModels.BackPartialModel { Url = "/Admin/Users/", Text = " Back" };
+
+}
+
+<h1>@ViewData["Title"]</h1>
+<h3>Provider: @Model.ServiceProvider?.FullName</h3>
+
+<hr />
+<p>
+    <a href="/Services/Create?providerId=@Model.ServiceProvider?.Id" class="bi bi-plus-square h-100 btn btn-primary"> Post a new service</a>
+    <partial name="Partials/Buttons/_BackPartial" model=backPartialModel />
+</p>
+
+<partial name="Partials/Service/_List" model="Model.Services" />

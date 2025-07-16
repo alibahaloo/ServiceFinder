@@ -1,0 +1,114 @@
+﻿@model Data.ApplicationUser
+@inject Repos.SubscriptionRepo _SubscriptionRepo
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var user = await UserManager.GetUserAsync(User);
+    if (user == null)
+    {
+        throw new ArgumentNullException(nameof(user), "user cannot be null");
+    }
+
+    string backUrl;
+    if (Context.Request.Headers["Referer"].ToString() == "" || Context.Request.Headers["Referer"].ToString().Contains("Delete"))
+    {
+        backUrl = $"./Index";
+    }
+    else
+    {
+        backUrl = Context.Request.Headers["Referer"].ToString();
+    }
+
+    var cancelBtn = new Data.InputModels.BackPartialModel { Url = backUrl, Text = " Cancel" };
+}
+
+<div>
+    @if (@ViewData["PageMode"]?.ToString() == "Service Provider")
+    {
+        @if (user != null && await _SubscriptionRepo.IsUserAllowed(user.Id, SubscriptionFunctions.ViewProviderContactInfo, 0, Model.Id))
+        {
+            <partial name="Partials/ApplicationUser/_ProviderProfile" model="Model" />
+        } else
+        {
+            <p class="text-danger">Your current subscription doesn't allow you to view the contact information. Upgrade to view.</p>
+        }
+    } else
+    {
+        <h1>User Account Details</h1>
+        <h5>Account Information</h5>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.FullName)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.FullName)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Email)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Email)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.AddressLine1)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.AddressLine1)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.AddressLine2)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.AddressLine2)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.PostalCode)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.PostalCode)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.PhoneNumber)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.PhoneNumber)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.City.Name)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.City.Name)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Subscription)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Subscription.Name)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.UserType)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.UserType)
+            </dd>
+        </dl>
+    }
+</div>
+
+@if (@ViewData["PageMode"]?.ToString() == "Delete")
+{
+    <form method="post">
+        <input type="hidden" asp-for="Id" />
+        <partial name="Partials/Buttons/_DeletePartial" />
+        <partial name="Partials/Buttons/_BackPartial" model=cancelBtn />
+    </form>
+}
+
+@if (@ViewData["PageMode"]?.ToString() == "Details")
+{
+    <div>
+        <a asp-page="./Edit" asp-route-id="@Model?.Id" class="bi bi-pencil-square btn btn-warning"> Edit</a> |
+        <a asp-page="./Delete" asp-route-id="@Model?.Id" class="bi bi-trash btn btn-danger"> Delete</a> |
+        <partial name="Partials/Buttons/_BackPartial" model=cancelBtn />
+    </div>
+}

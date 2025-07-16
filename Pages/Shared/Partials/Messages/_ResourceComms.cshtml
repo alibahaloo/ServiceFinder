@@ -1,0 +1,50 @@
+﻿@model Data.InputModels.Message
+@using Microsoft.EntityFrameworkCore;
+@inject ApplicationDbContext _Context
+@inject UserManager<ApplicationUser> _UserManager;
+@{
+    var messageThread = await _Context.MessageThreads
+    .Include(mt => mt.Messages.OrderByDescending(m => m.CreatedAt)).ThenInclude(m => m.AddedBy)
+    .FirstOrDefaultAsync(mt => mt.Id == Model.ThreadId);
+
+    var user = await _UserManager.GetUserAsync(User);
+}
+
+<div class="col-sm-6 col-md-6">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title text-uppercase">Message Thread</h3>
+            @if (Model.IsEnabled)
+            {
+                <form method="post" asp-page-handler="SendMessage">
+                    <input type="hidden" asp-for="ResourceId" value="@Model.ResourceId" />
+                    <input type="hidden" asp-for="ResourceType" value="@Model.ResourceType" />
+                    <input type="hidden" asp-for="ThreadId" value="@Model.ThreadId" />
+                    <div class="form-floating mb-3">
+                        <textarea asp-for="Body" class="form-control" style="height: 100px"> </textarea>
+                        <label asp-for="Body" class="control-label">Message</label>
+                        <span asp-validation-for="Body" class="text-danger"></span>
+                    </div>
+                    <partial name="Partials/Buttons/_SendPartial" />
+                </form>
+            }
+            <hr />
+            <div class="overflow-scroll" style="height:500px">
+                @if (messageThread != null && messageThread.Messages.Count > 0)
+                {
+                    foreach (var message in messageThread.Messages)
+                    {
+                        <span class="fw-bold">From: </span> <span> @message.AddedBy.FullName</span>
+                        <span class="fw-bold">On: </span> <span> @message.CreatedAt</span>
+                        <p>@message.Body</p>
+                        <hr />
+                    }
+                }
+                else
+                {
+                    <p class="card-text">No Messages Found.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

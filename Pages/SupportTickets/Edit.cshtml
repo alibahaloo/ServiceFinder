@@ -1,0 +1,36 @@
+﻿@page
+@model ServiceFinder.Pages.SupportTickets.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+    var backBtn = new Data.InputModels.BackPartialModel { Url = $"/SupportTickets/Details?Id={Model.Input.Id}", Text = " Cancel" };
+}
+
+<h1>Edit</h1>
+
+<h4>Support Ticket</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Input.Id" />
+            <div class="form-floating mb-3">
+                <textarea asp-for="Input.Description" class="form-control" style="height: 100px"> </textarea>
+                <label asp-for="Input.Description" class="control-label">Describe your inquiry</label>
+                <span asp-validation-for="Input.Description" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.EmailAddress" class="form-control" readonly />
+                <label asp-for="Input.EmailAddress" class="control-label"></label>
+                <span asp-validation-for="Input.EmailAddress" class="text-danger"></span>
+            </div>
+            <partial name="Partials/Buttons/_CreatePartial" />
+            <partial name="Partials/Buttons/_BackPartial" model=backBtn />
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

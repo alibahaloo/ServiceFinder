@@ -1,0 +1,8 @@
+﻿@page
+@model ServiceFinder.Pages.Errors._400Model
+@{
+    ViewData["Title"] = "Bad Request";
+    var errorMessage = TempData["ErrorMessage"] as string;
+}
+<h1 class="text-danger">400 Bad Request</h1>
+<p class="text-danger">@errorMessage</p>

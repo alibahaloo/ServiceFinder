@@ -1,0 +1,77 @@
+﻿@model IList<Data.Review>
+@inject UserManager<ApplicationUser> UserManager
+@inject Repos.ReviewRepo ReviewRepo
+@{
+    var curUser = await UserManager.GetUserAsync(User);
+}
+
+@if (Model != null)
+{
+    @if (Model.Count > 0)
+    {
+        <div class="row row-cols-1 row-cols-md-4 g-4" data-masonry='{"percentPosition": true }'>
+        @foreach (var item in Model)
+        {
+                <div class="col" style="height:400px">
+                    <div class="card h-100">
+                        @{
+                            var headerClass = "card-header";
+                            if (item.AddedById == curUser?.Id)
+                            {
+                                headerClass = "card-header bg-info-subtle";
+                            }
+                        }
+                    <div class="@headerClass">
+                        <h5 class="text-uppercase"><a href="/Reviews/Details?Id=@item.Id">@item.Title</a></h5>
+                        @{
+                            int fillStars = item.Stars;
+                            int emptyStars = 5 - fillStars;
+
+                            for (int i = 0; i < fillStars; i++)
+                            {
+                                <small class="bi bi-star-fill"></small>
+                            }
+
+                            for (int i = 0; i < emptyStars; i++)
+                            {
+                                <small class="bi bi-star"></small>
+                            }
+                        }
+                        @if (item.IsByVerifiedCustomer)
+                        {
+                            <small class="text-success m-0 p-0 d-inline" title="This is a verified review as there is a confirmed booking from the customer who wrote it">
+                                Verified Customer
+                            </small>
+                        }
+                    </div>
+                    <div class="card-body overflow-auto">
+                        <p class="text-break p-0 fst-italic m-0" style="white-space: pre-line;">
+                            @item.Body.TrimStart();
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <small class="text-muted">@item.CreatedAt</small><br />
+                            <small class="text-muted">
+                                From: @item.AddedBy.FullName 
+                                @if (item.IsByVerifiedCustomer)
+                                {
+                                    <span class="bi bi-patch-check" title="This is a verified review as there is a confirmed booking from the customer for this service"></span>
+                                }
+                        </small>
+
+                        @if (@ViewData["PageMode"]?.ToString() == "My Reviews")
+                        {
+                            <br />
+                            <small class="text-muted">Service: <a href="/Services/Details?Id=@item.ServiceId">@item.Service.Name</a></small>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        </div>
+    } else {
+        <div class="alert alert-info fw-semibold text-uppercase" role="alert">
+            No reviews found!
+        </div>
+    }
+} 

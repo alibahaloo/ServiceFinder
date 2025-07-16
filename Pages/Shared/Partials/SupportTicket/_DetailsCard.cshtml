@@ -1,0 +1,69 @@
+﻿@inject UserManager<ApplicationUser> _UserManager
+@model Data.SupportTicket
+@{
+    var curUser = await _UserManager.GetUserAsync(User);
+}
+<dl class="row">
+    @if (Model.IsAccessRequest)
+    {
+        <dt class="row text-center">
+            <span class="h3 text-info">This is an access request for a service provider</span>
+        </dt>
+    }
+    <dt class="col-sm-3">
+        @Html.DisplayNameFor(model => model.Description)
+    </dt>
+    <dd class="col-sm-9">
+        @Html.DisplayFor(model => model.Description)
+    </dd>
+
+    @if (curUser?.UserType == UserAccountRoles.Admin)
+    {
+        <dt class="col-sm-3">
+            @Html.DisplayNameFor(model => model.User)
+        </dt>
+        <dd class="col-sm-9">
+            <a href="/Admin/Users/Details?id=@Model.UserId">@Html.DisplayFor(model => model.User.FullName)</a>
+            <br />
+            <small class="fst-italic">@Model.EmailAddress</small>
+        </dd>
+        <dt class="col-sm-3">
+            @Html.DisplayNameFor(model => model.User.UserType)
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.User.UserType)
+            @if (Model.User.UserType == UserAccountRoles.ServiceProvider)
+            {
+                switch (Model.User.ServiceProviderType)
+                {
+                    case ServiceProviderType.Freelancer:
+                        <small>(Freelancer)</small>
+                        break;
+                    case ServiceProviderType.RegisteredTrader:
+                        <small>(Registered Trader)</small>
+                        break;
+                }
+            }
+        </dd>
+    }
+   
+    <dt class="col-sm-3">
+        @Html.DisplayNameFor(model => model.CreatedAt)
+    </dt>
+    <dd class="col-sm-9">
+        @Html.DisplayFor(model => model.CreatedAt)
+    </dd>
+    <dt class="col-sm-3">
+        @Html.DisplayNameFor(model => model.Status)
+    </dt>
+    <dd class="col-sm-9">
+        @if (Model.Status == SupportTicketStatus.Open)
+        {
+            <span class="d-inline p-1 bg-primary text-white">@Model.Status</span>
+        }
+        else
+        {
+            <span class="d-inline p-1 bg-secondary text-white">@Model.Status</span>
+        }
+    </dd>
+</dl>

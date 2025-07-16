@@ -1,0 +1,62 @@
+﻿@page
+@model ServiceFinder.Pages.SupportTickets.CreateModel
+@inject UserManager<Data.ApplicationUser> UserManager
+@inject Repos.SupportTicketRepo SupportTicketRepo;
+@{
+    ViewData["Title"] = "Create";
+}
+<h1 class="bi bi-question-square"> Open a Support Ticket</h1>
+<p class="text-center fw-bold">
+
+    Welcome to our Support Center – your direct line to quick and personalized assistance. Have a question, issue, or need guidance? Open a support ticket, and our expert team will get you sorted swiftly. Your satisfaction is our priority – let's make your experience seamless.
+</p>
+<div class="row text-center">
+    <div class="col-12 d-flex align-items-center justify-content-center">
+        <img src="/images/helping-hands.jpg" class="rounded img-fluid" alt="We're here to help" style="max-width: 50%;">       
+    </div>
+</div>
+<p class="lead text-center fw-bold">Our team is here for you</p>
+
+<hr />
+
+@if (Model.CurUser != null && Model.SupportTicket != null)
+{
+    <p class="fw-semibold">Our records show that you already have an unresolved support ticket. Our admins are reviewing and will be in touch with you.</p>
+    <p class="fw-semibold">If you wish to communicate with our admin team, open the existing support ticket using the link below and use the chat system to send a message.</p>
+    <div class="text-center">
+        <a href="/SupportTickets/Details?Id=@Model.SupportTicket.Id" class="btn btn-info bi bi-question-square"> View Open Support Ticket Details</a>
+    </div>
+} else
+{
+    <p class="fw-semibold m-0">Use the form below to create a support ticket. Fully describe your inquiry and our team will get in touch with you.</p>
+    <div class="row">
+        <div class="col-md-12">
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-floating mb-3">
+
+                    @if (Model.CurUser == null)
+                    {
+                        <input asp-for="Input.EmailAddress" class="form-control" />
+                    }
+                    else
+                    {
+                        <input type="hidden" asp-for="Input.EmailAddress" class="form-control" value="@Model.CurUser.Email" />
+                    }
+                    <label asp-for="Input.EmailAddress" class="control-label">Your Email Address</label>
+                    <span asp-validation-for="Input.EmailAddress" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea asp-for="Input.Description" class="form-control" style="height: 100px"> </textarea>
+                    <label asp-for="Input.Description" class="control-label">Describe your inquiry</label>
+                    <span asp-validation-for="Input.Description" class="text-danger"></span>
+                </div>
+                <partial name="Partials/Buttons/_SendPartial" />
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

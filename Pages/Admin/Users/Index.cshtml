@@ -1,0 +1,160 @@
+﻿@page
+@model ServiceFinder.Pages.Admin.Users.IndexModel
+@inject Repos.SubscriptionRepo _subscriptionRepo
+@inject Repos.SupportTicketRepo _SupportTicketRepo
+@{
+    ViewData["Title"] = "User Accounts";
+    ViewData["PageMode"] = "List";
+
+    SelectListItem firstItem = new() { Value = "0", Text = "All" };
+    List<SelectListItem> subscriptionList = new SelectList(_subscriptionRepo.GetAll(), "Id", "Name").ToList();
+    subscriptionList.Insert(0, firstItem);
+
+    List<SelectListItem> userTypeList = new();
+    int index = 0;
+    foreach (var item in UserAccountRoles.GetList())
+    {
+        var selectListItem = new SelectListItem { Selected = false, Text = item, Value = item };
+        userTypeList.Insert(index, selectListItem);
+        index++;
+    }
+
+    userTypeList.Insert(0, new SelectListItem { Selected = false, Text = "All", Value = "All" });
+
+    ViewData["SubscriptionId"] = subscriptionList;
+    ViewData["UserType"] = userTypeList;
+}
+<h1>@ViewData["Title"]</h1>
+<a class="bi bi-plus-square h-100 btn btn-primary" href="/Admin/Users/Invite"> Invite User</a>
+<hr />
+<form id="searchForm" method="get">
+    <dl class="row">
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <select asp-for="Input.UserType" class="form-control" asp-items="ViewBag.UserType"></select>
+                <label asp-for="Input.UserType" class="control-label"></label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <select asp-for="Input.SubscriptionId" class="form-control" asp-items="ViewBag.SubscriptionId"></select>
+                <label asp-for="Input.SubscriptionId" class="control-label"></label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <label class="form-check form-switch">
+                <input class="form-check-input" asp-for="Input.Verified" /> @Html.DisplayNameFor(model => model.Input.Verified)
+            </label>
+        </div>
+    </dl>
+    <dl class="row">
+        <dd class="col-sm-8">
+            <input asp-for="Input.Search" class="form-control" aria-required="true" placeholder="Search by full name or email address" />
+        </dd>
+        <dd class="col-sm-2">
+            <button id="searchSubmit" type="submit" class="bi bi-search w-100 btn btn-primary"> Search</button>
+        </dd>
+        <dd class="col-sm-2">
+            <a class="bi bi-x-lg w-100 btn btn-warning" href="./Index" role="button"> Reset</a>
+        </dd>
+    </dl>
+</form>
+<table class="table">
+    <tbody>
+        @foreach (var item in Model.ApplicationUsers)
+        {
+            <tr class="align-middle">
+                <td>
+                    <a asp-page="./Details" asp-route-id="@item.Id">@item.Email</a>
+                    <br />
+                    <strong>Type: </strong>
+                    @Html.DisplayFor(modelItem => item.UserType)
+                    @if (item.UserType == UserAccountRoles.ServiceProvider)
+                    {
+                        switch (item.ServiceProviderType)
+                        {
+                            case ServiceProviderType.Freelancer:
+                                <small>(Freelancer)</small>
+                                break;
+                            case ServiceProviderType.RegisteredTrader:
+                                <small>(Registered Trader)</small>
+                                break;
+                        }
+                    }
+                    <br />
+                    @if (item.Subscription is not null)
+                    {
+                        <strong>Subscription: </strong>
+                        @Html.DisplayFor(modelItem => item.Subscription.Name)
+                    }
+
+                </td>
+                <td>
+                    @if (item.UserType == UserAccountRoles.ServiceProvider)
+                    {
+                        <form method="post" asp-page-handler="Verify" style="display: flex; align-items: center; gap: 10px;" class="m-1">
+                            <input type="hidden" name="Id" value="@item.Id" />
+                            @if (item.IsVerified)
+                            {
+                                <span class="d-inline p-1 bg-success small">Verified Account</span>
+                                <input type="hidden" name="command" value="deny" />
+                                <button type="submit" class="bi bi-x-square btn btn-sm btn-warning"> Revoke Verification</button>
+                            }
+                            else
+                            {
+                                <span class="d-inline p-1 bg-warning small">Unverified Account</span>
+                                if (item.Email != null)
+                                {
+                                    var supportTicket = await _SupportTicketRepo.GetSupportTicketByEmail(item.Email);
+
+                                    if (supportTicket != null)
+                                    {
+                                        <a class="bi bi-envelope-paper" href="/SupportTickets/Details?Id=@supportTicket.Id"> View Access Request</a>
+                                    }
+
+                                    <input type="hidden" name="command" value="verify" />
+                                    <button type="submit" class="bi bi-check-square btn btn-sm btn-success"> Verify</button>
+                                }
+                            }
+                        </form>
+                    }
+
+                    <form method="post" asp-page-handler="Confirm" style="display: flex; align-items: center; gap: 10px;" class="m-1">
+                        <input type="hidden" name="Id" value="@item.Id" />
+                        @if (item.EmailConfirmed)
+                        {
+                            <span class="d-inline p-1 bg-success small">Confirmed Email Address</span>
+                            <input type="hidden" name="command" value="deny" />
+                            <button type="submit" class="bi bi-x-square btn btn-sm btn-warning"> Revoke Confirmation</button>
+                        } else
+                        {
+                            <span class="d-inline bg-warning small">Unconfirmed Email Address</span>
+                            <input type="hidden" name="command" value="confirm" />
+                            <button type="submit" class="bi bi-check-square btn btn-sm btn-success"> Confirm</button>
+                        }
+                    </form>
+
+                    @if (item.UserType == UserAccountRoles.ServiceProvider)
+                    {
+                        <a href="/Admin/Services/Index?providerId=@item.Id" class="bi bi-building-gear btn btn-sm btn-warning m-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Manage Services"></a>
+                    }
+                    <a asp-page="./Edit" asp-route-id="@item.Id" class="bi bi-pencil-square btn btn-sm btn-warning m-1" title="Edit"></a>
+                    <a asp-page="./Delete" asp-route-id="@item.Id" class="bi bi-trash btn btn-sm btn-danger m-1" title="Delete"></a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@{
+    string pageUrl = "Index?";
+
+    if (Model.Input.Search != string.Empty) pageUrl += $"Input.Search={Model.Input.Search}&";
+    if (Model.Input.UserType != "All" && Model.Input.UserType is not null) pageUrl += $"Input.UserType={Model.Input.UserType}&";
+    if (Model.Input.SubscriptionId != 0) pageUrl += $"Input.SubscriptionId={Model.Input.SubscriptionId}&";
+    if (Model.Input.Verified != false) pageUrl += $"Input.Verified=true&";
+
+    var paginationModel = new Utility.ListPages { PageCount = Model.PageCount, Url = pageUrl };
+}
+
+<partial name="_PaginationPartial" model="paginationModel" />

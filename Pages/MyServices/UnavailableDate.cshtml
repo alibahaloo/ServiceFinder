@@ -1,0 +1,147 @@
+﻿@page
+@model ServiceFinder.Pages.MyServices.UnavailableDateModel
+@{
+    ViewData["Title"] = "Set Availability";
+    ViewData["PageMode"] = "Set Availability";
+
+    // Define a list of months
+    var thisMonth = DateTime.Now.Month;
+    var months = new List<SelectListItem>
+    {
+        new SelectListItem { Text = "January", Value = "January", Selected = (thisMonth == 1) },
+        new SelectListItem { Text = "February", Value = "February", Selected = (thisMonth == 2) },
+        new SelectListItem { Text = "March", Value = "March", Selected = (thisMonth == 3) },
+        new SelectListItem { Text = "April", Value = "April", Selected = (thisMonth == 4) },
+        new SelectListItem { Text = "May", Value = "May", Selected = (thisMonth == 5) },
+        new SelectListItem { Text = "June", Value = "June", Selected = (thisMonth == 6) },
+        new SelectListItem { Text = "July", Value = "July", Selected = (thisMonth == 7) },
+        new SelectListItem { Text = "August", Value = "August", Selected = (thisMonth == 8) },
+        new SelectListItem { Text = "September", Value = "September", Selected = (thisMonth == 9) },
+        new SelectListItem { Text = "October", Value = "October", Selected = (thisMonth == 10) },
+        new SelectListItem { Text = "November", Value = "November", Selected = (thisMonth == 11) },
+        new SelectListItem { Text = "December", Value = "December", Selected = (thisMonth == 12) }
+    };
+
+    int thisYear = DateTime.Now.Year;
+    int maxYear = thisYear + 10;
+
+    //Find current month and year
+    string currentMonth = DateTime.Now.ToString("MMMM");
+    int currentYear = DateTime.Now.Year;
+
+    var calendarModel = new Data.InputModels.CalendarPartialModel { Month = Model.SelectedMonth, Year = Model.SelectedYear, Dates = Model.CalendarDates };
+
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#SelectedMonth").change(function () {
+            $("#searchForm").submit();
+        });
+
+        $("#SelectedYear").change(function () {
+            $("#searchForm").submit();
+        });
+
+        $(".day").click(function () {
+            // Extracting the date from the ID
+            var id = $(this).attr("id");
+            var dateArray = id.split("_")[1].split("-");
+            var year = dateArray[0];
+            var month = dateArray[1];
+            var day = dateArray[2];
+
+            // Creating the formatted date string
+            var formattedDate = year + "-" + month + "-" + day;
+
+            // Convert formattedDate to a Date object
+            var selectedDate = new Date(formattedDate);
+            var today = new Date();
+
+            // Set the time of today to 00:00:00 to only compare dates
+            today.setHours(0, 0, 0, 0);
+
+            // Check if selectedDate is before today
+            if (selectedDate < today) {
+                alert("You cannot select a date before today.");
+                return; // Stop execution
+            }
+
+            if ($(this).hasClass("active")) {
+                $("#dateToRemove").val(formattedDate);
+                $("#formRemoveDate").submit()
+            } else {
+                $("#Input_Date").val(formattedDate);
+                $("#formSaveDate").submit();
+            }
+        });
+    });
+
+    // Function to handle button click (preventing double form submission)
+    function handleDateClick() {
+        // Disable the button and change its text
+        var button = $("#formSaveDate button");
+        button.prop("disabled", true);
+        button.text("Adding...");
+
+        // Submit the form
+        $("#formSaveDate").submit();
+    }
+</script>
+
+<h1 class="bi bi-calendar-week"> @ViewData["Title"]</h1>
+<p class="fw-semibold m-0">
+    Manage your availability for the <a href="/Services/Details?Id=@Model.Service.Id">'@Model.Service.Name'</a> service. Enabling this feature allows customers to utilize the booking system and schedule appointments on dates when the service is available.
+</p>
+<p class="fw-semibold mt-2">
+    Explore the calendar to select specific months and years. Click on desired dates to mark them as 'unavailable for booking.' A second click will remove the unavailability status.
+</p>
+
+<hr />
+
+
+<div class="row">
+    <div class="col-md-6 col-sm-12">
+        <form id="searchForm" method="get">
+            <input type="hidden" name="Id" value="@Model.Service.Id" />
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-floating mb-3">
+                        @Html.DropDownListFor(model => model.SelectedMonth, months,  new { @class = "form-control" })
+                        <label asp-for="SelectedMonth" class="control-label">Month</label>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="form-floating mb-3">
+                        <input type="number" asp-for="SelectedYear" min="@thisYear" max="@maxYear" class="form-control" />
+                        <label asp-for="SelectedYear" class="control-label">Year</label>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <a class="bi bi-x-lg w-100 btn btn-warning" href="../MyServices/UnavailableDate?serviceId=@Model.Service.Id" role="button"> Reset</a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <p class="bg-warning mt-2">
+                        <strong>NOTE: </strong>The selected dates, highlighted in <span class="bg-danger text-white p-1">RED</span>, are currently unavailable for customer bookings. All other dates remain open for scheduling.
+                    </p>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-6 col-sm-12">
+        <partial name="Partials/Booking/_Calendar" model=calendarModel />
+    </div>
+</div>
+
+<form method="post" id="formSaveDate">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Input.ServiceId" value="@Model.Service.Id" />
+    <input type="hidden" asp-for="Input.Date" />
+</form>
+
+<form method="post" id="formRemoveDate" asp-page-handler="DeleteDate" class="d-none">
+    <input type="hidden" name="serviceId" value="@Model.Service.Id" />
+    <input type="hidden" id="dateToRemove" name="date" value="" />
+</form>

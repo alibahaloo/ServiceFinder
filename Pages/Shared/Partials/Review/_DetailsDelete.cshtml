@@ -1,0 +1,72 @@
+﻿@model Data.Review
+@inject UserManager<ApplicationUser> _UserManager;
+@inject Repos.ReviewRepo _ReviewRepo
+@{
+    var user = await _UserManager.GetUserAsync(User);
+    var cancelBtn = new Data.InputModels.BackPartialModel { Url = $"/Reviews/Details?Id={Model.Id}", Text = " Cancel" };
+}
+
+<h1 class="bi bi-hand-thumbs-up"> @ViewData["Title"]</h1>
+<hr />
+<div class="row row-cols-1 row-cols-md-1 g-4" data-masonry='{"percentPosition": true }'>
+    <div class="col" style="height:400px">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="text-uppercase">@Model.Title</h3>
+                @{
+                    int fillStars = Model.Stars;
+                    int emptyStars = 5 - fillStars;
+
+                    for (int i = 0; i < fillStars; i++)
+                    {
+                        <span class="bi bi-star-fill"></span>
+                    }
+
+                    for (int i = 0; i < emptyStars; i++)
+                    {
+                        <span class="bi bi-star"></span>
+                    }
+                }
+                @if (Model.IsByVerifiedCustomer)
+                {
+                    <span class="text-success m-0 p-0 d-inline" title="This is a verified review as there is a confirmed booking from the customer who wrote it">
+                        Verified Customer
+                    </span>
+                }
+            </div>
+            <div class="card-body overflow-auto">
+                <p class="text-break p-1 fst-italic m-0" style="white-space: pre-line;">
+                    @Model.Body.TrimStart();
+                </p>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">@Model.CreatedAt</small><br />
+                <small class="text-muted">
+                    From: @Model.AddedBy.FullName 
+                    @if (Model.IsByVerifiedCustomer)
+                    {
+                        <span class="bi bi-patch-check" title="This is a verified review as there is a confirmed booking from the customer for this service"></span>
+                    }
+                </small><br />
+                <small class="text-muted">Service: <a href="/Services/Details?Id=@Model.ServiceId">@Model.Service.Name</a></small>
+            </div>
+        </div>
+    </div>
+</div>
+@if (@ViewData["PageMode"]?.ToString() == "Delete")
+{
+    <form method="post">
+        <input type="hidden" asp-for="Id" />
+        <partial name="Partials/Buttons/_DeletePartial" />
+        <partial name="Partials/Buttons/_BackPartial" model=cancelBtn />
+    </form>
+}
+
+@if (@ViewData["PageMode"]?.ToString() == "Details" && user != null && await _ReviewRepo.IsUserOwner(user.Id, Model.Id))
+{
+    <hr />
+    <div>
+        <a asp-page="./Edit" asp-route-id="@Model?.Id" class="bi bi-pencil-square btn btn-warning"> Edit</a>
+        <a asp-page="./Delete" asp-route-id="@Model?.Id" class="bi bi-trash btn btn-danger"> Delete</a>
+    </div>
+}

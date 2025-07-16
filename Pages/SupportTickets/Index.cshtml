@@ -1,0 +1,65 @@
+﻿@page
+@model ServiceFinder.Pages.SupportTickets.IndexModel
+@{
+    ViewData["Title"] = "My Support Tickets";
+}
+
+<h1 class="bi bi-question-square"> @ViewData["Title"]</h1>
+<p class="fw-semibold m-0">
+    View the list of support tickets you've submitted:
+</p>
+<hr />
+<p>
+    <a asp-page="Create" class="bi bi-plus-square h-100 btn btn-primary"> Open a new ticket</a>
+</p>
+
+<form id="searchForm" method="get">
+    <div class="row">
+        <div class="col-md-4 col-sm-12 d-flex align-items-center">
+            <div class="form-control mb-3">
+                <label asp-for="Input.Status" class="control-label text-uppercase fw-semibold"></label>
+                <select asp-for="Input.Status" class="form-control" asp-items="Html.GetEnumSelectList<SupportTicketStatus>()"></select>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12 d-flex align-items-center">
+            <button id="searchSubmit" type="submit" class="bi bi-search btn btn-primary mx-1"> Apply Filter</button>
+            <a class="bi bi-x-lg btn btn-warning" href="/SupportTickets/Index" role="button"> Reset</a>
+        </div>
+    </div>
+</form>
+
+@if (Model.SupportTickets.Count > 0)
+{
+    <table class="table">
+        <tbody>
+            @foreach (var item in Model.SupportTickets)
+            {
+                <tr class="align-middle">
+                    <td>
+                        <a asp-page="./Details" asp-route-id="@item.Id" class="bi bi-question-square"> View Ticket</a>
+                        @if (item.Status == SupportTicketStatus.Open)
+                        {
+                            <span class="d-inline p-1 bg-primary text-white text-uppercase">@item.Status</span>
+                        }
+                        else
+                        {
+                            <span class="d-inline p-1 bg-secondary text-white text-uppercase">@item.Status</span>
+                        }
+                        <br />
+                        <small>Created: @item.CreatedAt</small>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+} else
+{
+    <hr />
+    <p>No support tickets to display!</p>
+}
+
+@{
+    var paginationModel = new Utility.ListPages { PageCount = Model.PageCount, Url = "Index" };
+}
+
+<partial name="_PaginationPartial" model="paginationModel" />

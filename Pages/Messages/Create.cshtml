@@ -1,0 +1,49 @@
+﻿@page
+@model ServiceFinder.Pages.Messages.CreateModel
+@inject UserManager<ApplicationUser> _UserManager
+@{
+    var curUser = await _UserManager.GetUserAsync(User);
+
+    ViewData["Title"] = "Messaging";
+    ViewData["PageMode"] = "Create";
+
+    string backUrl;
+    if (HttpContext.Request.Headers["Referer"].ToString() == "" || HttpContext.Request.Headers["Referer"].ToString().Contains("Create"))
+    {
+        backUrl = $"/Services/Details?Id={Model.Service.Id}";
+    }
+    else
+    {
+        backUrl = HttpContext.Request.Headers["Referer"].ToString();
+    }
+
+    var cancelBtn = new Data.InputModels.BackPartialModel { Url = backUrl, Text = " Cancel" };
+
+}
+
+<h1 class="bi bi-envelope-plus"> @ViewData["Title"]</h1>
+
+@if (Model.MessageThread != null && Model.MessageThread.ArchivedOn != null)
+{
+    <p class="fw-semibold m-0 p-0">This thread is archived. No further messages can be sent.</p>
+
+} else
+{
+    if (curUser?.UserType == UserAccountRoles.ServiceProvider)
+    {
+        <p class="fw-semibold m-0 p-0">Utilize the form below to send a new message in this thread and engage in communication with your customer.</p>
+    } else
+    {
+        <p class="fw-semibold m-0 p-0">Utilize the form below to send a new message in this thread and communicate with the service provider.</p>
+    }
+}
+<hr />
+
+<partial name="Partials/Messages/_Create" model="new Data.InputModels.Message { ResourceId = Model.Service.Id, ResourceType = MessageResourceType.Service, ThreadId = Model.MessageThread?.Id}"/>
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

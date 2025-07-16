@@ -1,0 +1,60 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject Repos.UserRepo UserRepo 
+
+<ul class="navbar-nav">
+@if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.GetUserAsync(User);
+        var UserFullName = user?.FullName;
+        bool newMessage = await UserRepo.HasNewMessages(user?.Id);
+
+    <li class="nav-item">
+        <span class="bi bi-person nav-link text-white"> Hello @user?.FullName</span>
+    </li>
+
+    <li class="nav-item">
+        <a class="bi bi-speedometer nav-link text-white" href="/Dashboard"> Dashboard</a>
+    </li>
+
+        @if (newMessage) {
+
+            <li class="nav-item">
+                <a class="bi bi-envelope nav-link text-white" href="/Messages/Inbox"> Messaging
+                    <span class="badge text-bg-danger">New</span>
+                </a>
+            </li>
+        } else {
+            <li class="nav-item">
+                <a class="bi bi-envelope nav-link text-white" href="/Messages/Inbox"> Messaging</a>
+            </li>
+        }
+
+
+    <partial name="Partials/Menus/_Menu" />
+
+    @if (user?.UserType == UserAccountRoles.Admin)
+    {
+        <partial name="Partials/Menus/_AdminPartial" />
+    }
+
+    <li class="nav-item">
+        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post" >
+                <button type="submit" class="bi bi-box-arrow-right nav-link btn btn-link text-white"> Logout</button>
+        </form>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+            <a class="text-white btn btn-success text-uppercase" href="/Identity/Account/Register?Type=Service%20Provider">Become a Service Provider</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-white" asp-area="Identity" asp-page="/Account/Register">Register</a>
+    </li>
+    <li class="nav-item">
+            <a class="bi bi-box-arrow-in-right nav-link text-white" asp-area="Identity" asp-page="/Account/Login"> Login</a>
+    </li>
+}
+</ul>

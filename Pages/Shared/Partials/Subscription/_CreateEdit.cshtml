@@ -1,0 +1,71 @@
+﻿@model Data.Subscription
+<h1>@ViewData["Title"]</h1>
+
+<h4>Subscription</h4>
+<hr />
+<form method="post">
+    <div class="row">
+        <div class="col-md-4">
+            <h5>Basic Information:</h5>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @if (Model != null)
+            {
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="Order" />
+            }
+            <div class="form-floating mb-3">
+                <input asp-for="Name" class="form-control" />
+                <label asp-for="Name" class="control-label"></label>
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="MaxServices" class="form-control" />
+                <label asp-for="MaxServices" class="control-label"></label>
+                <span asp-validation-for="MaxServices" class="text-danger"></span>
+                <p class="text-success">For unlimited services, leave the field blank</p>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="MaxMessages" class="form-control" />
+                <label asp-for="MaxMessages" class="control-label"></label>
+                <span asp-validation-for="MaxMessages" class="text-danger"></span>
+                <p class="text-success">For unlimited messages, leave the field blank.</p>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Fee" class="form-control" />
+                <label asp-for="Fee" class="control-label"></label>
+                <span asp-validation-for="Fee" class="text-danger"></span>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" asp-for="MustContactToApply" />
+                <label class="form-check-label" asp-for="MustContactToApply">@Html.DisplayNameFor(model => model.MustContactToApply)</label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <h5>Functionalities:</h5>
+            <div class="form-check form-switch">
+                <input class="form-check-input" asp-for="CanViewServiceContactInfo" />
+                <label class="form-check-label" asp-for="CanViewServiceContactInfo">@Html.DisplayNameFor(model => model.CanViewServiceContactInfo)</label>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" asp-for="CanViewProviderContactInfo" />
+                <label class="form-check-label" asp-for="CanViewProviderContactInfo">@Html.DisplayNameFor(model => model.CanViewProviderContactInfo)</label>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" asp-for="CanBookService" />
+                <label class="form-check-label" asp-for="CanBookService">@Html.DisplayNameFor(model => model.CanBookService)</label>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" asp-for="CanWriteReview" />
+                <label class="form-check-label" asp-for="CanWriteReview">@Html.DisplayNameFor(model => model.CanWriteReview)</label>
+            </div>
+            <partial name="Partials/Buttons/_CreatePartial" />
+        </div>
+    </div>
+</form>
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

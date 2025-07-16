@@ -1,0 +1,63 @@
+﻿@page
+@model ServiceFinder.Pages.Bookings.MyBookingsModel
+@inject UserManager<ApplicationUser> _UserManager
+@{
+    ViewData["Title"] = "My Bookings";
+    ViewData["PageMode"] = "List";
+    var user = await _UserManager.GetUserAsync(User);
+}
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Apply Select2 to the dropdown
+        $('#Input_ServiceId').select2({
+            theme: 'bootstrap-5'
+        });
+        $('#Input_Status').select2({
+            theme: 'bootstrap-5'
+        });
+    });
+</script>
+<h1 class="bi bi-calendar-event"> My Bookings</h1>
+@if (user?.UserType == UserAccountRoles.ServiceProvider)
+{
+    <p class="fw-semibold m-0">
+        View the comprehensive list of all bookings associated with your services:
+    </p>
+}
+else
+{
+    <p class="fw-semibold m-0">
+        Explore the complete list of all bookings you've made:
+    </p>
+}
+<hr />
+<form id="searchForm" method="get">
+    <div class="row">
+        <div class="col-md-4 col-sm-12 d-flex align-items-center">
+            <div class="form-control mb-3">
+                <label asp-for="Input.ServiceId" class="control-label text-uppercase fw-semibold"></label>
+                <select asp-for="Input.ServiceId" class="form-control" asp-items="ViewBag.ServiceId"></select>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12 d-flex align-items-center">
+            <div class="form-control mb-3">
+                <label asp-for="Input.Status" class="control-label text-uppercase fw-semibold"></label>
+                <select asp-for="Input.Status" class="form-control" asp-items="Html.GetEnumSelectList<BookingStatus>()"></select>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12 d-flex align-items-center">
+            <button id="searchSubmit" type="submit" class="bi bi-search btn btn-primary mx-1"> Apply Filter</button>
+            <a class="bi bi-x-lg btn btn-warning mx-1" href="../Bookings/MyBookings" role="button"> Reset</a>
+        </div>
+    </div>
+</form>
+<hr />
+<partial name="Partials/Booking/_List" model="Model.Bookings" />
+
+@{
+    string pageUrl = $"MyBookings?Input.ServiceId={Model.Input.ServiceId}&Input.Status={Model.Input.Status}&";
+
+    var paginationModel = new Utility.ListPages { PageCount = Model.PageCount, Url = pageUrl };
+}
+
+<partial name="_PaginationPartial" model="paginationModel" />

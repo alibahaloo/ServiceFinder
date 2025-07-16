@@ -1,0 +1,185 @@
+﻿@page
+@model ServiceFinder.Pages.DashboardModel
+@inject UserManager<ApplicationUser> _UserManager
+@{
+    var user = await _UserManager.GetUserAsync(User);
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1 class="bi bi-speedometer"> @ViewData["Title"]</h1>
+<hr />
+<h2>Welcome Back, @user?.FullName!</h2>
+<p class="lead fw-semibold">Below is a summary of your activity</p>
+
+@if (Model.UserType == UserAccountRoles.Admin)
+{
+    <h3 class="text-center">Admin Stats</h3>
+    <table class="table table-hover">
+        <thead>
+            <tr class="table-secondary">
+                <th scope="col" style="width: 50%;">Header</th>
+                <th scope="col" style="width: 50%;">Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr onclick="window.location='/Admin/Provinces/Index'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-gear"></i> Total Provinces
+                </td>
+                <td style="width: 50%;">@Model.TotalProvinces</td>
+            </tr>
+            <tr onclick="window.location='/Admin/Cities/Index'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-gear"></i> Total Cities
+                </td>
+                <td style="width: 50%;">@Model.TotalCities</td>
+            </tr>
+            <tr onclick="window.location='/Admin/ServiceCategories/Index'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-gear"></i> Total Categories
+                </td>
+                <td style="width: 50%;">@Model.TotalCategories</td>
+            </tr>
+            <tr onclick="window.location='/Services/Index'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-building"></i> Total Services
+                </td>
+                <td style="width: 50%;">@Model.TotalServices</td>
+            </tr>
+            <tr onclick="window.location='/Admin/Users/Index'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-person"></i> Total Registered Users
+                </td>
+                <td style="width: 50%;">@Model.TotalUsers</td>
+            </tr>
+            <tr>
+                <td style="width: 50%;">
+                    <i class="bi bi-calendar-event"></i> Total Bookings
+                </td>
+                <td style="width: 50%;">@Model.TotalBookings</td>
+            </tr>
+            <tr>
+                <td style="width: 50%;">
+                    <i class="bi bi-hand-thumbs-up"></i> Total Reviews
+                </td>
+                <td style="width: 50%;">@Model.TotalServices</td>
+            </tr>
+            <tr>
+                <td style="width: 50%;">
+                    <i class="bi bi-envelope"></i> Total Messages
+                </td>
+                <td style="width: 50%;">@Model.TotalMessages</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr />
+}
+
+@if (Model.UserType == UserAccountRoles.ServiceProvider)
+{
+    <table class="table table-hover">
+        <thead>
+            <tr class="table-secondary">
+                <th scope="col" style="width: 50%;">Header</th>
+                <th scope="col" style="width: 50%;">Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr onclick="window.location='/MyServices/Index'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-building"></i> Posted Services
+                </td>
+                <td style="width: 50%;">@Model.ServiceCount</td>
+            </tr>
+            <tr onclick="window.location='/Reviews/MyReviews'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-hand-thumbs-up"></i> Reviews Received
+                </td>
+                <td style="width: 50%;">@Model.ReviewCount</td>
+            </tr>
+            <tr onclick="window.location='/Messages/Inbox'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-envelope"></i> Open Messages
+                </td>
+                <td style="width: 50%;">@Model.MessageCount</td>
+            </tr>
+            <tr onclick="window.location='/Bookings/MyBookings?Input.Status=All'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-calendar"></i> Total Bookings
+                </td>
+                <td style="width: 50%;">@Model.AllBookingCount</td>
+            </tr>
+            <tr onclick="window.location='/Bookings/MyBookings?Input.Status=Open'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-calendar-event"></i> Open Bookings
+                </td>
+                <td style="width: 50%;">@Model.OpenBookingCount</td>
+            </tr>
+            <tr onclick="window.location='/Bookings/MyBookings?Input.Status=Confirm'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-calendar-check"></i> Confirmed Bookings
+                </td>
+                <td style="width: 50%;">@Model.ConfirmedBookingCount</td>
+            </tr>
+            <tr onclick="window.location='/Bookings/MyBookings?Input.Status=Decline'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-calendar-x"></i> Declined Bookings
+                </td>
+                <td style="width: 50%;">@Model.RejectedBookingCount</td>
+            </tr>
+        </tbody>
+    </table>
+} else
+{
+    <table class="table table-hover">
+        <thead>
+            <tr class="table-secondary">
+                <th scope="col" style="width: 50%;">Header</th>
+                <th scope="col" style="width: 50%;">Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr onclick="window.location='/Messages/Inbox'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-envelope"></i> Open Messages
+                </td>
+                <td style="width: 50%;">@Model.MessageCount</td>
+            </tr>
+            <tr onclick="window.location='/Reviews/MyReviews'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-hand-thumbs-up"></i> Reviews Given
+                </td>
+                <td style="width: 50%;">@Model.ReviewCount</td>
+            </tr>
+            <tr onclick="window.location='/Bookings/MyBookings?Input.Status=All'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-calendar"></i> Total Bookings
+                </td>
+                <td style="width: 50%;">@Model.AllBookingCount</td>
+            </tr>
+            <tr onclick="window.location='/Bookings/MyBookings?Input.Status=Open'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-calendar-event"></i> Open Bookings
+                </td>
+                <td style="width: 50%;">@Model.OpenBookingCount</td>
+            </tr>
+            <tr onclick="window.location='/Bookings/MyBookings?Input.Status=Confirm'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-calendar-check"></i> Confirmed Bookings
+                </td>
+                <td style="width: 50%;">@Model.ConfirmedBookingCount</td>
+            </tr>
+            <tr onclick="window.location='/Bookings/MyBookings?Input.Status=Decline'" style="cursor: pointer;">
+                <td style="width: 50%;">
+                    <i class="bi bi-calendar-x"></i> Declined Bookings
+                </td>
+                <td style="width: 50%;">@Model.RejectedBookingCount</td>
+            </tr>
+        </tbody>
+    </table>
+
+}
+
+
+

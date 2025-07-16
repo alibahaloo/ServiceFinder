@@ -1,0 +1,47 @@
+﻿@{
+    string refererUrl;
+
+    if (Context.Request.Headers["Referer"].ToString() == "" || (Context.Request.Headers["Referer"].ToString().Contains("Delete") || (Context.Request.Headers["Referer"].ToString().Contains("Edit"))))
+    {
+        refererUrl = "./Index";
+    }
+    else
+    {
+        refererUrl = Context.Request.Headers["Referer"].ToString();
+    }
+
+    var backPartialModel = new Data.InputModels.BackPartialModel { Url = refererUrl, Text = " Cancel" };
+}
+@model Data.Industry
+<h1>@ViewData["Title"]</h1>
+<div>
+    <h4>Industry</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+    </dl>
+</div>
+
+@if (@ViewData["PageMode"]?.ToString() == "Delete")
+{
+    <form method="post">
+        <input type="hidden" asp-for="Id" />
+        <partial name="Partials/Buttons/_DeletePartial" />
+        <partial name="Partials/Buttons/_BackPartial" model=backPartialModel />
+    </form>
+}
+
+@if (@ViewData["PageMode"]?.ToString() == "Details")
+{
+    <div>
+        <a asp-page="./Edit" asp-route-id="@Model?.Id" class="bi bi-pencil-square btn btn-warning">Edit</a> |
+        <a asp-page="./Delete" asp-route-id="@Model?.Id" class="bi bi-trash btn btn-danger"> Delete</a> |
+        <partial name="Partials/Buttons/_BackPartial" model=backPartialModel />
+    </div>
+
+}

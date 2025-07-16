@@ -1,0 +1,109 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model Data.InputModels.ApplicationUser
+@inject Repos.CityRepo _cityRepo
+@inject Repos.SubscriptionRepo _subscriptionRepo
+@{
+    ViewData["CityId"] = new SelectList(_cityRepo.GetAll(), "Id", "Name");
+    ViewData["SubscriptionId"] = new SelectList(_subscriptionRepo.GetAll(), "Id", "Name");
+    var backPartialModel = new Data.InputModels.BackPartialModel { Url = "./Index", Text = " Cancel" };
+}
+
+<h1>@ViewData["Title"]</h1>
+<h4>User</h4>
+<hr />
+
+<form method="post">
+    <div class="row">
+        <div class="col-md-6">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+            @if (Model != null)
+            {
+                <input type="hidden" asp-for="Id" />
+            }
+            <div class="form-floating mb-3">
+                <input asp-for="FullName" class="form-control" aria-required="true" placeholder="John Doe" />
+                <label asp-for="FullName">Full Name</label>
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Email" class="form-control" aria-required="true"/>
+                <label asp-for="Email">Email</label>
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="PhoneNumber" class="form-control" aria-required="true" placeholder="5551234567" />
+                <label asp-for="PhoneNumber">Phone Number</label>
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="AddressLine1" class="form-control" aria-required="true" placeholder="123 - 45th Street" />
+                <label asp-for="AddressLine1">Address Line 1</label>
+                <span asp-validation-for="AddressLine1" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="AddressLine2" class="form-control" aria-required="false" placeholder="optional" />
+                <label asp-for="AddressLine2">Address Line 2</label>
+                <span asp-validation-for="AddressLine2" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="PostalCode" class="form-control" aria-required="true" placeholder="optional" />
+                <label asp-for="PostalCode">Postal Code</label>
+                <span asp-validation-for="PostalCode" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <select asp-for="CityId" class="form-control" asp-items="ViewBag.CityId"></select>
+                <label asp-for="CityId" class="control-label"></label>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-floating mb-3">
+                <select asp-for="SubscriptionId" class="form-control" asp-items="ViewBag.SubscriptionId"></select>
+                <label asp-for="SubscriptionId" class="control-label"></label>
+            </div>
+            <fieldset class="d-grid gap-1">
+                <legend>Account Type</legend>
+                @if (Model != null)
+                {
+                    @foreach (var role in UserAccountRoles.GetList())
+                    {
+                        string id = "Type" + role.Replace(" ", "");
+
+                        if (role == Model.UserType)
+                        {
+                            <input class="btn-check" type="radio" name="UserType" id="@id" value="@role" checked="checked" />
+                        }
+                        else
+                        {
+                            <input class="btn-check" type="radio" name="UserType" id="@id" value="@role" />
+                        }
+                        <label class="btn btn-outline-primary" for=@id>@role</label>
+                    }
+                } else
+                {
+                    
+                }
+            </fieldset>
+            <hr />
+            @if (Model?.UserType == UserAccountRoles.ServiceProvider)
+            {
+                <div class="form-control mb-3">
+                    <label asp-for="ServiceProviderType" class="control-label text-uppercase fw-semibold">Select Service Provider Type:</label>
+                    <select asp-for="ServiceProviderType" class="form-control">
+                        <option value="@ServiceProviderType.Freelancer">Freelancer</option>
+                        <option value="@ServiceProviderType.RegisteredTrader">Registered Trader</option>
+                    </select>
+                </div>
+                <div class="form-check form-switch">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="IsVerified" /> @Html.DisplayNameFor(model => model.IsVerified)
+                    </label>
+                </div>
+            }
+            
+            <partial name="Partials/Buttons/_CreatePartial" />
+            <partial name="Partials/Buttons/_BackPartial" model=backPartialModel />
+        </div>
+    </div>
+</form>

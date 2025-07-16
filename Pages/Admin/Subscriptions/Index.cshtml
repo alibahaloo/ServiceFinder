@@ -1,0 +1,140 @@
+﻿@page
+@model ServiceFinder.Pages.Admin.Subscriptions.IndexModel
+
+@{
+    ViewData["Title"] = "Subscriptions";
+    ViewData["PageMode"] = "List";
+
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#List tbody').sortable({
+            items: 'tr',
+            cursor: 's-resize',
+            axis: 'y', // Allow vertical dragging only
+            update: function (event, ui) {
+                // Get the order of rows after drop
+                var orderDictionary = {};
+
+                // Iterate through rows and update ingredientDictionary
+                $('#List tbody tr').each(function (index, tr) {
+                    var itemId = $(tr).attr('id');
+                    var order = index + 1; // Adding 1 to make it 1-based
+                    orderDictionary[itemId] = order;
+                });
+
+                // Set the value of the hidden input in the form
+                $('#listOrder').val(JSON.stringify(orderDictionary));
+
+                $('#saveOrder').prop('disabled', false);
+
+                $('#saveOrderInfo').hide();
+            }
+        });
+    });
+</script>
+
+<h1>@ViewData["Title"]</h1>
+
+<partial name="Partials/Buttons/_AddNewPartial" />
+
+<p class="m-0">Drag rows in the list below to set their order of appearance. Then hit `save order` button.</p>
+<form method="post" asp-page-handler="saveOrder">
+    <input type="hidden" name="listOrder" id="listOrder" />
+    <button type="submit" id="saveOrder" class="bi bi-floppy btn btn-success btn-sm" disabled> Save order</button>
+    <small id="saveOrderInfo" class="fst-italic bg-warning">No changes detected. Re-order the list as you wish, then click on the button to save the order</small>
+</form>
+
+<table class="table" id="List">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Subscriptions[0].Order)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Subscriptions[0].Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Subscriptions[0].MaxServices)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Subscriptions[0].MaxMessages)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Subscriptions[0].CanViewServiceContactInfo)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Subscriptions[0].CanViewProviderContactInfo)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Subscriptions[0].CanBookService)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Subscriptions[0].CanWriteReview)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Subscriptions[0].Fee)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Subscriptions) {
+        <tr id="@item.Id">
+            <td style="cursor: s-resize;">
+                <span class="bi bi-arrow-down-up">
+                    @item.Order
+                </span>
+            </td>
+            <td>
+                <a asp-page="./Details" asp-route-id="@item.Id">@item.Name</a>
+            </td>
+            <td>
+                @if (item.MaxServices == null)
+                {
+                    <span>Unlimited</span>
+                } else
+                {
+                    @Html.DisplayFor(modelItem => item.MaxServices)
+                }
+
+            </td>
+            <td>
+                @if (item.MaxMessages == null)
+                {
+                    <span>Unlimited</span>
+                } else
+                {
+                    @Html.DisplayFor(modelItem => item.MaxMessages)
+                }
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CanViewServiceContactInfo)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CanViewProviderContactInfo)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CanBookService)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CanWriteReview)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Fee)
+            </td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@item.Id" class="bi bi-pencil-square btn btn-sm btn-warning"></a>
+                <a asp-page="./Delete" asp-route-id="@item.Id" class="bi bi-trash btn btn-sm btn-danger"></a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+@{
+    var paginationModel = new Utility.ListPages { PageCount = Model.PageCount, Url = "Index" };
+}
+
+<partial name="_PaginationPartial" model="paginationModel" />
