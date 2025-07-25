@@ -130,7 +130,8 @@ Ensure you have the following installed on your development machine:
        "SmtpPort": 587,
        "SmtpUsername": "xxx",
        "SmtpPassword": "xxx",
-       "SmtpFromEmail": "xxx"
+       "NoReplyEmail": "xxx",
+       "SupportEmail": "xxx"
      },
      "AllowedHosts": "*",
      "AWS": {
