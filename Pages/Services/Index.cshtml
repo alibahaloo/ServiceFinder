@@ -1,0 +1,141 @@
+﻿@page
+@using Data.InputModels
+@model ServiceFinder.Pages.Services.IndexModel
+@inject Repos.ServiceCategoryRepo _ServiceCategoryRepo
+@inject Repos.CityRepo _CityRepo
+@{
+    //ViewData["Title"] = "Active Services";
+    ViewData["PageMode"] = "Services";
+
+    string accordionClass = string.Empty;
+    string btnClass = string.Empty;
+    string titleAddition = string.Empty;
+
+    string? cityName = string.Empty;
+    string? categoryName = string.Empty;
+
+    var serviceCategory = await _ServiceCategoryRepo.GetEntityAsync(Model.Input.ServiceCategoryId);
+    categoryName = serviceCategory?.Name.Trim();
+
+    var city = await _CityRepo.GetEntityAsync(Model.Input.CityId);
+    cityName = city?.Name.Trim();
+
+    if (Model.Input.ServiceCategoryId != 0 || Model.Input.CityId != 0)
+    {
+        accordionClass = "accordion-collapse collapse";
+        btnClass = "accordion-button collapsed";
+    } else
+    {
+        accordionClass = "accordion-collapse collapse show";
+        btnClass = "accordion-button";
+    }
+
+    ViewData["Title"] = "Browse services";
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Apply Select2 to the dropdown
+        $('#Input_ServiceCategoryId').select2({
+            theme: 'bootstrap-5'
+        });
+        $('#Input_CityId').select2({
+            theme: 'bootstrap-5'
+        });
+        
+    });
+</script>
+@if ((cityName != null) && (categoryName != null))
+{
+    <p class="h1 bi bi-building"> <u>@categoryName</u> services in <u>@cityName</u></p>
+}
+else if (categoryName != null)
+{
+    <p class="h1 bi bi-building"> <u>@categoryName</u> services</p>
+}
+else if (cityName != null)
+{
+    <p class="h1 bi bi-building"> All Services in <u>@cityName</u></p>
+} else
+{
+    <p class="h1 bi bi-building"> All Services</p>
+}
+<p class="m-0 fw-semibold">
+    Explore the comprehensive list of currently available public services. Click on the service names to access detailed information, communicate with the service providers, and book their services seamlessly.
+</p>
+<hr />
+
+<div class="accordion" id="accordionPanelsStayOpenExample">
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+            <button class="@btnClass bi bi-search bg-info text-dark fw-bold text-uppercase" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                &nbsp; Search
+            </button>
+        </h2>
+        <div id="panelsStayOpen-collapseOne" class="@accordionClass" aria-labelledby="panelsStayOpen-headingOne">
+            <div class="accordion-body">
+                <form id="searchForm" method="get">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-control mb-3">
+                                <label asp-for="Input.ServiceCategoryId" class="control-label text-uppercase fw-semibold"></label>
+                                <select asp-for="Input.ServiceCategoryId" class="form-control" asp-items="ViewBag.ServiceCategoryId"></select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-control mb-3">
+                                <label asp-for="Input.CityId" class="control-label text-uppercase fw-semibold"></label>
+                                <select asp-for="Input.CityId" class="form-control" asp-items="ViewBag.CityId"></select>
+                                
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="Input.ServiceProviderType" value="@ServiceProviderType.All" id="serviceProviderType_@ServiceProviderType.All">
+                                <label class="form-check-label text-uppercase fw-semibold" for="serviceProviderType_@ServiceProviderType.All">
+                                    All
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="Input.ServiceProviderType" value="@ServiceProviderType.Freelancer" id="serviceProviderType_@ServiceProviderType.Freelancer">
+                                <label class="form-check-label text-uppercase fw-semibold" for="serviceProviderType_@ServiceProviderType.Freelancer">
+                                    Freelancer
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="Input.ServiceProviderType" value="@ServiceProviderType.RegisteredTrader" id="serviceProviderType_@ServiceProviderType.RegisteredTrader">
+                                <label class="form-check-label text-uppercase fw-semibold" for="serviceProviderType_@ServiceProviderType.RegisteredTrader">
+                                    Registered Trader
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-8">
+                            <input asp-for="Input.Search" class="form-control" aria-required="true" placeholder="Search for service (business name)" />
+                        </div>
+                        <div class="col-sm-2">
+                            <button id="searchSubmit" type="submit" class="bi bi-search btn btn-primary"> Search</button>
+                            <a class="bi bi-x-lg btn btn-warning" href="../Services/Index" role="button"> Reset</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<partial name="Partials/Service/_List" model="Model.Services" />
+
+@{
+    string pageUrl = "Index?";
+
+    if (Model.Input.Search != string.Empty) pageUrl += $"Input.Search={Model.Input.Search}&";
+    if (Model.Input.ServiceCategoryId != 0) pageUrl += $"Input.ServiceCategoryId={Model.Input.ServiceCategoryId}&";
+    if (Model.Input.CityId != 0) pageUrl += $"Input.CityId={Model.Input.CityId}&";
+    pageUrl += $"Input.ServiceProviderType={Model.Input.ServiceProviderType}&";
+
+    var paginationModel = new Utility.ListPages { PageCount = Model.PageCount, Url = pageUrl };
+}
+
+<partial name="_PaginationPartial" model="paginationModel" />

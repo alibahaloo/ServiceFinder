@@ -1,0 +1,95 @@
+﻿@page
+@model ServiceFinder.Pages.Bookings.DetailsModel
+@inject UserManager<ApplicationUser> _UserManager
+@{
+    ViewData["Title"] = "Booking";
+    ViewData["PageMode"] = "Details";
+    var curUser = await _UserManager.GetUserAsync(User);
+}
+
+<h1 class="bi bi-calendar-event"> @ViewData["Title"]</h1>
+@if (curUser?.UserType == UserAccountRoles.ServiceProvider)
+{
+    <p class="fw-semibold m-0">
+        Review the details of the booking submitted by the customer and respond accordingly. A notification email will be sent to them afterward, and you can use the messaging system to communicate directly.
+    </p>
+
+} else
+{
+    <p class="fw-semibold m-0">
+        These are the details of your booking. The service provider has been notified, and you can utilize the messaging system to communicate directly with them.
+    </p>
+}
+
+<hr />
+<div class="container py-2">
+    <div class="row" data-masonry='{"percentPosition": true }'>
+        <div class="col-sm-6 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title text-uppercase">Details</h3>
+                    <hr />
+                    <partial name="Partials/Booking/_DetailsCard" model="@Model.Booking" />
+                    <hr />
+                    @if (curUser?.UserType == UserAccountRoles.ServiceProvider) //Provider should be able to Confirm and Ignore
+                    {
+                        @if (Model.Booking.Status == BookingStatus.Open && !Model.Booking.IsExpired) //only open tickets and be responded
+                        {
+                            <div class="alert alert-info fw-semibold text-uppercase" role="alert">
+                                Respond to this booking. A notification will be sent to the customer.
+                            </div>
+                            <form method="post">
+                                <input type="hidden" asp-for="Booking.Id" />
+
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <span class="fw-bold text-uppercase">RESPOND: </span>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <input class="" type="radio" name="status" id="status_confirmed" value="@Data.BookingStatus.Confirm" checked="checked" />
+                                        <label class="text-white p-1 bg-success" for=status_confirmed>@Data.BookingStatus.Confirm</label>
+
+                                        <input class="" type="radio" name="status" id="status_declined" value="@Data.BookingStatus.Decline" />
+                                        <label class="text-white p-1 bg-danger" for=status_declined>@Data.BookingStatus.Decline</label>
+                                    </div>
+                                </div>
+                                <partial name="Partials/Buttons/_CreatePartial" />
+                            </form>
+                        } else
+                        {
+                            <div class="alert alert-warning fw-semibold text-uppercase" role="alert">
+                                This booking is not open anymore. No further edits can be done.
+                            </div>
+                            if (Model.Booking.IsExpired)
+                            {
+                                <a asp-page="./Delete" asp-route-id="@Model.Booking.Id" class="bi bi-trash btn btn-danger"> Delete Expired Booking</a>
+                            }
+                        }
+                    }
+                    else //The customer can edit
+                    {
+                        if (Model.Booking.Status == BookingStatus.Open && !Model.Booking.IsExpired)
+                        {
+                            <a asp-page="./Edit" asp-route-id="@Model.Booking.Id" class="bi bi-pencil-square btn btn-warning"> Modify Booking</a>
+                        } else
+                        {
+                            <div class="alert alert-warning fw-semibold text-uppercase" role="alert">
+                                This booking is not open anymore. No further edits can be done.
+                            </div>
+                        }
+                        <a asp-page="./Delete" asp-route-id="@Model.Booking.Id" class="bi bi-trash btn btn-danger"> Delete Booking</a>
+                    }
+                </div>
+            </div>
+        </div>
+        @if (Model.Booking.Status == BookingStatus.Open && !Model.Booking.IsExpired)
+        {
+            <partial name="Partials/Messages/_ResourceComms" model="new Data.InputModels.Message { ResourceId = Model.Booking.Id, ResourceType = MessageResourceType.Booking, ThreadId = Model.MessageThread?.Id}" />
+        } else
+        {
+            <partial name="Partials/Messages/_ResourceComms" model="new Data.InputModels.Message { ResourceId = Model.Booking.Id, ResourceType = MessageResourceType.Booking, ThreadId = Model.MessageThread?.Id, IsEnabled = false}" />
+        }
+        
+
+    </div>
+</div>

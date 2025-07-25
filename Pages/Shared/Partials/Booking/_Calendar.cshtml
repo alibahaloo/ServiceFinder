@@ -1,0 +1,179 @@
+﻿@model Data.InputModels.CalendarPartialModel
+@inject Utility.CalendarService _CalendarService
+@{
+    var firstDayOfMonth = Utility.CalendarService.GetFirstDayOfMonth(Model.Month, Model.Year);
+    var numberOfDaysInMonth = Utility.CalendarService.GetNumberOfDaysInMonth(Model.Month, Model.Year);
+}
+<style>
+* {box-sizing: border-box;}
+ul {list-style-type: none;}
+
+
+.month {
+  padding: 10px 10px;
+  width: 100%;
+  background: #0275d8;
+  text-align: center;
+}
+
+.month ul {
+  margin: 0;
+  padding: 0;
+}
+
+.month ul li {
+  color: white;
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
+
+.month .prev {
+  float: left;
+  padding-top: 10px;
+}
+
+.month .next {
+  float: right;
+  padding-top: 10px;
+}
+
+.weekdays {
+  margin: 0;
+  padding: 10px 0;
+  background-color: #ddd;
+}
+
+.weekdays li {
+  display: inline-block;
+  /*width: 13.6%;*/
+  width: 12%;
+  color: #666;
+  text-align: center;
+}
+
+.days {
+  padding: 10px 0;
+  background: #eee;
+  margin: 0;
+}
+
+.days li {
+  list-style-type: none;
+  display: inline-block;
+  /*width: 13.6%;*/
+  width: 12%;
+  text-align: center;
+  margin-bottom: 5px;
+  font-size:16px;
+  color: #777;
+}
+
+.days li .active {
+  padding: 5px;
+  background: #d9534f;
+  color: white !important
+}
+
+.day {
+    cursor: pointer;
+}
+
+.month_btn {
+    cursor: pointer;
+}
+</style>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+       // Get the serviceId from the current URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const serviceId = urlParams.get('serviceId');
+        
+        $('input[name="ServiceId"]').val(serviceId); // Set value for all inputs with name="ServiceId"
+
+        $("#BtnPrevMonth").click(function () {
+            $("#formPrevMonth").submit();
+        });
+
+        $("#BtnNextMonth").click(function () {
+            $("#formNextMonth").submit();
+        });
+    });
+</script>
+
+<form method="post" id="formNextMonth" asp-page-handler="NextMonth" class="d-none">
+    <input type="hidden" name="ServiceId" value="" />
+    <input type="hidden" name="CurrentMonth" value="@Model.Month" />
+    <input type="hidden" name="CurrentYear" value="@Model.Year" />
+</form>
+<form method="post" id="formPrevMonth" asp-page-handler="PrevMonth" class="d-none">
+    <input type="hidden" name="ServiceId" value="" />
+    <input type="hidden" name="CurrentMonth" value="@Model.Month" />
+    <input type="hidden" name="CurrentYear" value="@Model.Year" />
+</form>
+<div class="container m-0 p-0">
+    <div class="month text-center">
+        <ul>
+            <li>
+                <span id="BtnPrevMonth" class="bi bi-arrow-left month_btn"></span>
+                @Model.Month - 
+                <span style="font-size:18px">@Model.Year</span>
+                <span id="BtnNextMonth" class="bi bi-arrow-right month_btn"></span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="text-center">
+        <ul class="weekdays">
+
+            @{
+                Utility.CalendarService.DaysOfWeek currentDay = Utility.CalendarService.ConvertDayOfWeekToCustom(firstDayOfMonth);
+            }
+
+            @for (int i = 0; i < 7; i++)
+            {
+                <li>@currentDay.ToString().Substring(0, 3)</li>
+                // Calculate the next day in a circular manner
+                currentDay = (Utility.CalendarService.DaysOfWeek)(((int)currentDay + 1) % 7);
+            }
+        </ul>
+    </div>
+    <div class="text-center">
+        <ul class="days">
+
+            @{
+                var eventDays = Utility.CalendarService.GetDaysInMonth(Model.Month, Model.Year, Model.Dates);
+            }
+
+            @for (int i = 1; i < numberOfDaysInMonth + 1; i++)
+            {
+                var formattedDate = Utility.CalendarService.FormatDateString($"{@Model.Year}-{@Model.Month}-{@i}");
+                //var today = Utility.CalendarService.GetTodayDateString();
+
+                DateTime givenDate = DateTime.ParseExact(formattedDate, "yyyy-MM-dd", null);
+                DateTime todayDate = DateTime.Today;
+
+                if (givenDate <= todayDate)
+                {
+                    <li class="my-1"><span id="day_@formattedDate" class="active day m-1 p-1">@i</span></li>
+                } else
+                {
+                    if (eventDays.Contains(i))
+                    {
+                        <li class="my-1"><span id="day_@formattedDate" class="active day m-1 p-1">@i</span></li>
+                    }
+                    else
+                    {
+                        <li class="my-1"><span id="day_@formattedDate" class="day">@i</span></li>
+                    }
+                }
+            }
+
+            @for (int j = numberOfDaysInMonth; j < 35; j++)
+            {
+                <li class="my-1"><span></span></li>
+            }
+        </ul>
+    </div>
+</div>

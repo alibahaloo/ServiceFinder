@@ -1,0 +1,23 @@
+﻿@inject Repos.ServiceCategoryRepo _Repo
+@{
+    var navItems = await _Repo.GetNavItems();
+}
+
+<li class="nav-item dropdown">
+    <a class="nav-link bi bi-tags dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Categories
+    </a>
+    <ul class="dropdown-menu">
+        @if (navItems.Any())
+        {
+            <li><span class="dropdown-header">Top Categories</span></li>
+            @foreach (var item in navItems)
+            {
+                <li><a class="dropdown-item" href="/Services/Index?Input.ServiceCategoryId=@item.Key&Input.CityId=0&Input.Search=&Input.IsLicensed=false">@item.Value</a></li>
+            }
+            <li><hr class="dropdown-divider"></li>
+        }
+        <li><a class="dropdown-item" href="/Services/Index">View All</a></li>
+    </ul>
+</li>
+

@@ -1,0 +1,22 @@
+﻿@page
+@model ServiceFinder.Pages.Messages.ArchivedModel
+@{
+    ViewData["Title"] = "Archived Messages";
+    ViewData["PageMode"] = "Archived";
+}
+<h1 class="bi bi-envelope"> @ViewData["Title"]</h1>
+<span class="text-uppercase fw-bold">Menu: </span>
+<br />
+<a class="text-dark bi bi-envelope" href="/Messages/Inbox"> Inbox</a> |
+<a class="text-dark bi bi-envelope-x" href="/Messages/Archived"> Archived</a>
+<p class="fw-semibold m-0">
+    Explore the list of your archived message threads:
+</p>
+<hr />
+<partial name="Partials/Messages/_List" model="Model.MessageThreads" />
+
+@{
+    var paginationModel = new Utility.ListPages { PageCount = Model.PageCount, Url = "Index" };
+}
+
+<partial name="_PaginationPartial" model="paginationModel" />

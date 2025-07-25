@@ -1,0 +1,22 @@
+﻿@inject Repos.CityRepo _Repo
+@{
+    var navItems = await _Repo.GetNavItems();
+}
+
+<li class="nav-item dropdown">
+    <a class="nav-link bi bi-pin-map dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Cities
+    </a>
+    <ul class="dropdown-menu">
+        @if (navItems.Any())
+        {
+            <li><span class="dropdown-header">Top Cities</span></li>
+            @foreach (var item in navItems)
+            {
+                <li><a class="dropdown-item" href="/Services/Index?Input.ServiceCategoryId=0&Input.CityId=@item.Key&Input.Search=&Input.IsLicensed=false">@item.Value</a></li>
+            }
+            <li><hr class="dropdown-divider"></li>
+        }
+        <li><a class="dropdown-item" href="/Services/Index">View All</a></li>
+    </ul>
+</li>

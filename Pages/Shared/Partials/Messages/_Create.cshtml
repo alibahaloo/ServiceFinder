@@ -1,0 +1,72 @@
+﻿@model Data.InputModels.Message
+@using Microsoft.EntityFrameworkCore;
+@inject ApplicationDbContext _Context
+@{
+    var messageThread = await _Context.MessageThreads
+    .Include(mt => mt.Messages.OrderByDescending(m => m.CreatedAt)).ThenInclude(m => m.AddedBy)
+    .FirstOrDefaultAsync(mt => mt.Id == Model.ThreadId);
+}
+<div class="container py-2">
+    <div class="row" data-masonry='{"percentPosition": true }'>
+        @if (messageThread?.ArchivedOn == null)
+        {
+            <div class="col-sm-6 col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title text-uppercase">Send</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <form method="post" asp-page-handler="SendMessage" class="d-inline">
+                                    <input type="hidden" asp-for="ResourceId" value="@Model.ResourceId" />
+                                    <input type="hidden" asp-for="ResourceType" value="@Model.ResourceType" />
+                                    <input type="hidden" asp-for="ThreadId" value="@Model.ThreadId" />
+                                    <div class="form-floating mb-3">
+                                        <textarea asp-for="Body" class="form-control" style="height: 100px"> </textarea>
+                                        <label asp-for="Body" class="control-label">Message</label>
+                                        <span asp-validation-for="Body" class="text-danger"></span>
+                                    </div>
+                                    <button type="submit" class="bi bi-send btn btn-primary d-inline" onClick="this.disabled=true; this.innerText=' Sending …'; this.form.submit();"> Send</button>
+                                </form>
+                                @if (messageThread != null)
+                                {
+                                    
+                                    <div class="alert alert-warning my-1" role="alert">
+                                        Archiving this thread will restrict further communication.
+                                    </div>
+                                    <form method="post" asp-page="/Messages/Inbox" asp-page-handler="Archive" class="d-inline">
+                                        <input type="hidden" name="messageThreadId" value="@messageThread?.Id" />
+                                        <button type="submit" class="bi bi-envelope-x btn btn-warning d-inline">Archive</button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        <div class="col-sm-6 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title text-uppercase">Message Thread</h3>
+                    <hr />
+                    <div class="overflow-scroll" style="height:500px">
+                        @if (messageThread != null && messageThread.Messages.Count > 0)
+                        {
+                            foreach (var message in messageThread.Messages)
+                            {
+                                <span class="fw-bold">From: </span> <span> @message.AddedBy.FullName</span>
+                                <span class="fw-bold">On: </span> <span> @message.CreatedAt</span>
+                                <p>@message.Body</p>
+                                <hr />
+                            }
+                        }
+                        else
+                        {
+                            <p class="card-text">No Messages Found.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,13 @@
+﻿@page
+@model ServiceFinder.Pages.Reviews.EditModel
+@inject Repos.ServiceRepo _serviceRepo
+@{
+    ViewData["Title"] = "Edit Review";
+    ViewData["PageMode"] = "Edit";
+    var service = await _serviceRepo.GetEntityAsync(Model.Input.ServiceId);
+}
+<h1 class="bi bi-hand-thumbs-up"> @ViewData["Title"]</h1>
+<p class="fst-italic" style="margin: 0">Write a review about '@service?.Name' service and describe your experience:</p>
+<hr />
+
+<partial name="Partials/Review/_CreateEdit" model="Model.Input" />

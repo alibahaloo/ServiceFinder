@@ -1,0 +1,104 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<style>
+    .forFading {
+        opacity: 0;
+    }
+</style>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Function to check if a certain percentage of the element is in the viewport
+        function isElementPartiallyInViewport(el, percentage = 20) {
+            var rect = el.getBoundingClientRect();
+            var windowHeight = (window.innerHeight || document.documentElement.clientHeight);
+            return (
+                rect.top <= windowHeight - (percentage / 100) * rect.height &&
+                rect.bottom >= 0
+            );
+        }
+
+        // Function to handle the fadeIn effect
+        function fadeInImages() {
+            $('.forFading').each(function (index) {
+                if (isElementPartiallyInViewport(this, 10)) {
+                    // Add a class to mark the image as animated
+                    $(this).addClass('animated');
+
+                    // Use fadeIn animation with a delay based on the index
+                    $(this).delay(100 * index).animate({ opacity: '1' }, 800);
+                }
+            });
+        }
+
+        // Initial check when the page loads
+        fadeInImages();
+
+        // Check again when the user scrolls
+        $(window).on('scroll', function () {
+            fadeInImages();
+        });
+    });
+</script>
+
+
+<div class="container mt-5">
+    <div class="row text-center forFading">
+        <div class="d-none d-md-block d-lg-block">
+            <img src="/images/system/FS-Logo-HD.png" class="rounded img-fluid mx-auto" alt="FindService Logo" style="width:50%;">
+        </div>
+        <div class="d-block d-sm-none">
+            <img src="/images/system/FS-Logo-HD.png" class="rounded img-fluid mx-auto" alt="FindService Logo">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 cl-sm-12 text-center mx-auto mt-5">
+            <form id="searchForm" asp-page="/Services/Index" method="get">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" name="Input.Search" placeholder="What kind of service are you looking for?" aria-label="Search for services" aria-describedby="button-addon2">
+                    <button class="btn btn-primary bi bi-search" type="submit"> Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <h3 class="text-center m-3 p-3">What We Offer</h3>
+    <div class="row text-center">
+        <div class="col-md-6 forFading">
+            <img src="/images/home/service-listing.jpg" class="rounded img-fluid" alt="...">
+            <strong>Service Listings</strong>
+            <p>
+                Browse through a diverse selection of service providers, each vetted for their expertise and reliability. With detailed profiles, you can make informed decisions that suit your needs.
+            </p>
+        </div>
+        <div class="col-md-6 forFading">
+            <img src="/images/home/booking.jpg" class="rounded img-fluid" alt="...">
+            <strong>Easy Bookings</strong>
+            <p>
+                We make it simple to book services directly, saving you time and hassle. Find the right service provider, check their availability, and secure your appointment in just a few clicks.
+            </p>
+        </div>
+    </div>
+    <div class="row text-center">
+        <div class="col-md-6 forFading">
+            <img src="/images/home/communication.jpg" class="rounded img-fluid" alt="...">
+            <strong>Direct Communication</strong>
+            <p>
+                Need to ask questions or discuss specific details? Our messaging feature lets you communicate directly with service providers, ensuring a smooth and personalized experience.
+            </p>
+        </div>
+        <div class="col-md-6 forFading">
+            <img src="/images/home/reviews.jpg" class="rounded img-fluid" alt="...">
+            <strong>Customer Reviews</strong> 
+            <p>
+                Share your experiences and read reviews from others to help you make the best choice. Service Finder is a community where trust and quality service are paramount.
+            </p>
+        </div>
+    </div>
+</div>

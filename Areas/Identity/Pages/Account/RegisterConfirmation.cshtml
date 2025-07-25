@@ -1,0 +1,86 @@
+﻿@page
+@model RegisterConfirmationModel
+@inject UserManager<ApplicationUser> UserManager
+@inject ServiceFinder.Repos.SubscriptionRepo _SubscriptionRepo
+@{
+    var user = await UserManager.FindByEmailAsync(@Model.Email);
+    ViewData["Title"] = "Register confirmation";
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+
+@if (user?.UserType == UserAccountRoles.ServiceProvider)
+{
+    <div class="alert alert-success fw-semibold" role="alert">
+        <p>Thank you for signing up as a Service Provider with us! To ensure the security and authenticity of your account, we have a two-step verification process in place.</p>
+    </div>
+
+    <h5>Step 1: Confirm Your Email</h5>
+    if (user?.EmailConfirmed == false)
+    {
+        <p>Please check your email (@Model.Email) for a confirmation link. Click on the link to verify your email address. If you haven't received the email, please check your spam folder. If you need us to resend the confirmation email, use <a href="/Identity/Account/ResendEmailConfirmation">this page</a>.</p>
+    } else
+    {
+        <div class="alert alert-info fw-semibold text-uppercase" role="alert">
+            You have already confirmed your email address. Please proceed to step 2.
+        </div>
+    }    
+
+    <h5>Step 2: Account Verification</h5>
+    <p>Use the form below to submit your access request:</p>
+    <div class="alert alert-warning fw-semibold text-uppercase" role="alert">
+        NOTE: You can't post services unless you submit your access request and it gets approved by our admins.
+    </div>
+    <div class="alert alert-warning fw-semibold text-uppercase" role="alert">
+        If for whatever reason you don't submit your request now, you can always come back to this page using the link sent to your email address and submit your request later, or simply login and follow the on-screen instructions after confirming your email.
+    </div>
+    <form method="post">
+        <input type="hidden" asp-for="Input.EmailAddress"/>
+
+        <p class="fw-bold h6">What kind of service provider are you?</p>
+        <strong>Freelancer: </strong>
+        <p class="text-small fst-italic">
+            A Freelancer on our platform is an independent and skilled service provider who offers services without the requirement of holding a business license or formal registration. Freelancers operate on a flexible basis, providing their expertise in various fields, from creative endeavors to professional services. They bring a personalized touch to their work and offer customers the flexibility to choose and book services without the constraints of a formal business structure.
+        </p>
+
+        <strong>Registered Trader: </strong>
+        <p class="text-small fst-italic">
+            A Registered Trader on our platform is a professional service provider who has taken the step of legally registering a business under their name. This type of service provider is committed to operating under the legal framework, and during the registration process, they are required to provide a valid business license for verification. Customers engaging with Registered Traders can trust in the legitimacy of the business entity, as it has undergone the formalities of business registration, ensuring transparency and professionalism in service delivery.
+        </p>
+        <div class="form-control mb-3">
+            <label asp-for="ServiceProviderType" class="control-label text-uppercase fw-semibold">Select One:</label>
+            <select asp-for="ServiceProviderType" class="form-control">
+                <option value="@ServiceProviderType.Freelancer">Freelancer</option>
+                <option value="@ServiceProviderType.RegisteredTrader">Registered Trader</option>
+            </select>
+        </div>
+        <p class="fw-bold h6">Describe your business and the nature of the services you provide:</p>
+        <div class="form-floating mb-3">
+            <textarea asp-for="Input.Description" class="form-control" style="height: 100px"> </textarea>
+            <label asp-for="Input.Description" class="control-label">Describe your business and the services you provide</label>
+            <span asp-validation-for="Input.Description" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <partial name="Partials/Buttons/_SendPartial" />
+        </div>
+    </form>
+    
+    <p>Our admin team will review your request, and upon approval, you will receive a notification via email. Once approved, you can start posting your services on our website.</p>
+
+    <p>If you have any questions or need assistance during the process, please don't hesitate to <a href="/ContactUs">contact us</a>. We're here to help!</p>
+
+} else
+{
+    <div class="alert alert-success fw-semibold" role="alert">
+        <p>Thank you for signing up!</p>
+        <p>Please check your email (@Model.Email) for a confirmation link.</p>
+        <p>Click on the confirmation link to activate your account and gain access to Service Finder</p>
+        <p>If you haven't received an email, please check your spam folder as well. You can re-send it using <a href="/Identity/Account/ResendEmailConfirmation">this page</a></p>
+        <p>If you encounter any issues, please <a href="/ContactUs">contact</a> our support team for assistance.</p>
+    </div>
+}
+<hr />
+<h2>Select Your Subscription</h2>
+<partial name="Partials/Subscription/_Select" model="Model.Email"/>

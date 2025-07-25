@@ -1,0 +1,167 @@
+﻿@page
+@model ServiceFinder.Pages.Bookings.CreateModel
+@inject UserManager<ApplicationUser> _UserManager
+
+@{
+    var user = await _UserManager.GetUserAsync(User);
+    ViewData["Title"] = "Book Service";
+    ViewData["PageMode"] = "Create";
+    var backToServiceBtn = new Data.InputModels.BackPartialModel { Url = $"/Services/Details?Id={Model.Service.Id}", Text = " Cancel" };
+
+    // Define a list of months
+    var thisMonth = DateTime.Now.Month;
+    var months = new List<SelectListItem>
+    {
+        new SelectListItem { Text = "January", Value = "January", Selected = (thisMonth == 1) },
+        new SelectListItem { Text = "February", Value = "February", Selected = (thisMonth == 2) },
+        new SelectListItem { Text = "March", Value = "March", Selected = (thisMonth == 3) },
+        new SelectListItem { Text = "April", Value = "April", Selected = (thisMonth == 4) },
+        new SelectListItem { Text = "May", Value = "May", Selected = (thisMonth == 5) },
+        new SelectListItem { Text = "June", Value = "June", Selected = (thisMonth == 6) },
+        new SelectListItem { Text = "July", Value = "July", Selected = (thisMonth == 7) },
+        new SelectListItem { Text = "August", Value = "August", Selected = (thisMonth == 8) },
+        new SelectListItem { Text = "September", Value = "September", Selected = (thisMonth == 9) },
+        new SelectListItem { Text = "October", Value = "October", Selected = (thisMonth == 10) },
+        new SelectListItem { Text = "November", Value = "November", Selected = (thisMonth == 11) },
+        new SelectListItem { Text = "December", Value = "December", Selected = (thisMonth == 12) }
+    };
+
+    int thisYear = DateTime.Now.Year;
+    int maxYear = thisYear + 10;
+
+    //Find current month and year
+    string currentMonth = DateTime.Now.ToString("MMMM");
+    int currentYear = DateTime.Now.Year;
+
+    var calendarModel = new Data.InputModels.CalendarPartialModel { Month = Model.SelectedMonth, Year = Model.SelectedYear, Dates = Model.UnavailableDates };
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#btnSelectedMonth").change(function () {
+            $("#searchForm").submit();
+        });
+
+        $("#btnSelectedYear").change(function () {
+            $("#searchForm").submit();
+        });
+
+        $(".day").click(function () {
+            if ($(this).hasClass("active day m-1 p-1")) return;
+
+            $("span.day.bg-success.text-white").removeClass('bg-success text-white m-1 p-1');
+            $(this).addClass('bg-success text-white m-1 p-1');
+
+            // Extracting the date from the ID
+            var id = $(this).attr("id");
+            var dateArray = id.split("_")[1].split("-");
+            var year = dateArray[0];
+            var month = dateArray[1];
+            var day = dateArray[2];
+
+            // Creating the formatted date string
+            var formattedDate = year + "-" + month + "-" + day;
+
+            $("#Input_StartDate").val(formattedDate);
+        });
+    });
+</script>
+
+<h1 class="bi bi-calendar-plus"> @ViewData["Title"]</h1>
+<p class="fw-semibold m-0">
+    Provide detailed information about your requirements for the <a href="/Services/Details?Id=@Model.Service.Id">'@Model.Service.Name'</a> service, and initiate the booking process directly. Once submitted, the service provider will receive a notification and subsequently confirm your booking.
+</p>
+<p class="fw-semibold mt-2">
+    Utilize the tool below to effortlessly navigate to your preferred month and year, and select a date for your booking. Dates highlighted in <span class="bg-danger text-white p-1">RED</span> on the calendar are currently <u>unavailable</u> for booking, either due to prior reservations by other customers or intentional unavailability marked by the service provider. All other days remain open for your convenience.
+</p>
+
+<hr />
+
+<div class="row">
+    <div class="col-md-6 col-sm-12">
+        <form id="searchForm" method="get">
+            <input type="hidden" name="serviceId" value="@Model.Service.Id" />
+            
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-floating mb-3">
+                        @Html.DropDownListFor(model => model.SelectedMonth, months, new { @class = "form-control", @id = "btnSelectedMonth" })
+                        <label asp-for="SelectedMonth" class="control-label">Month</label>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-floating mb-3">
+                        <input id="btnSelectedYear" type="number" asp-for="SelectedYear" min="@thisYear" max="@maxYear" class="form-control" />
+                        <label asp-for="SelectedYear" class="control-label">Year</label>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <a class="bi bi-x-lg btn btn-warning" href="./Create?serviceId=@Model.Service.Id" role="button"> Reset</a>
+                </div>
+            </div>
+        </form>
+        <div class="row my-1">
+            <div class="col-md-12">
+                <partial name="Partials/Booking/_Calendar" model=calendarModel />
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-sm-12">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Booking Request</h3>
+                <form method="post" asp-page-handler="Booking">
+                    <input type="hidden" asp-for="SelectedMonth" />
+                    <input type="hidden" asp-for="SelectedYear" />
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            <input type="hidden" asp-for="Input.ServiceId" value="@Model.Input.ServiceId" />
+                            <div class="form-floating mb-3">
+                                <textarea asp-for="Input.Description" class="form-control" style="height: 100px"> </textarea>
+                                <label asp-for="Input.Description" class="control-label">Describe your need</label>
+                                <span asp-validation-for="Input.Description" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input asp-for="Input.StartDate" class="form-control" value="@Model.BookingDate.ToString("yyyy-MM-dd")" readonly/>
+                                <label asp-for="Input.StartDate" class="control-label">Selected date</label>
+                                <span asp-validation-for="Input.StartDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input asp-for="Input.NumberOfHours" class="form-control" min="1" />
+                                <label asp-for="Input.NumberOfHours" class="control-label">Hours needed</label>
+                                <span asp-validation-for="Input.NumberOfHours" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="alert alert-info" role="alert">
+                                Upon saving, this request will be submitted to the service provider for their thorough review. Expect to receive an email notification once the review process is complete.
+                            </div>
+                            @if (user != null)
+                            {
+                                <button type="submit" class="bi bi-check-lg btn btn-primary" onClick="this.disabled=true; this.innerText=' Submitting …'; this.form.submit();"> Submit</button>
+                            } else
+                            {
+                                <a href="/Identity/Account/Login?ReturnUrl=/Bookings/Create?serviceId=@Model.Service.Id" class="bi bi-check-lg btn btn-primary"> Login to submit</a>
+                            }
+                            
+                            <partial name="Partials/Buttons/_BackPartial" model=backToServiceBtn />
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

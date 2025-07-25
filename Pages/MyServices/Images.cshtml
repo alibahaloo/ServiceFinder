@@ -1,0 +1,117 @@
+﻿@page
+@model ServiceFinder.Pages.MyServices.ImagesModel
+@{
+    ViewData["Title"] = "Images";
+    var cancelBtn = new Data.InputModels.BackPartialModel { Url = $"/Services/Details?id={Model.Service.Id}", Text = " Cancel" };
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#serviceImages tbody').sortable({
+            items: 'tr',
+            cursor: 's-resize',
+            axis: 'y', // Allow vertical dragging only
+            update: function (event, ui) {
+                // Get the order of rows after drop
+                var orderDictionary = {};
+
+                // Iterate through rows and update benefitDictionary
+                $('#serviceImages tbody tr').each(function (index, tr) {
+                    var benefitId = $(tr).attr('id');
+                    var order = index + 1; // Adding 1 to make it 1-based
+                    orderDictionary[benefitId] = order;
+                });
+
+                // Set the value of the hidden input in the form
+                $('#imagesOrder').val(JSON.stringify(orderDictionary));
+
+                $('#saveImagesOrder').prop('disabled', false);
+
+                $('#saveImagesOrderInfo').hide();
+            }
+        });
+    });
+</script>
+
+
+<h1 class="bi bi-image"> @ViewData["Title"]</h1>
+<p class="fw-semibold">Displaying sample works from <a href="/Services/Details?Id=@Model.Service.Id">'@Model.Service.Name'</a>.</p>
+<hr />
+
+@if (Model.ApplicationUser.UserType != UserAccountRoles.Customer )
+{
+    <form method="post" asp-page-handler="UploadImage" enctype="multipart/form-data">
+        <div class="row">
+            <div class="col-md-12">
+                <input type="hidden" asp-for="ServiceImage.ServiceId" value="@Model.Service.Id" />
+
+                <p class="h5 text-uppercase fw-semibold">Upload Image</p>
+                <div class="input-group mb-3">
+                    <input type="file" class="form-control" id="image" name="image">
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="ServiceImage.Description" class="form-control" aria-required="true" />
+                    <label asp-for="ServiceImage.Description">Image Description</label>
+                    <span asp-validation-for="ServiceImage.Description" class="text-danger"></span>
+                </div>
+                <button type="submit" class="bi bi-upload btn btn-primary" onClick="this.disabled=true; this.innerText=' Uploading …'; this.form.submit();"> Upload</button>
+            </div>
+        </div>
+    </form>
+    <hr />
+    <p class="h5 text-uppercase fw-semibold m-0">List of current images</p>
+    <p class="m-0">Drag rows in the list below to set their order of appearance. Then hit `save order` button.</p>
+    <form method="post" asp-page-handler="OrderImages">
+        <input type="hidden" name="imagesOrder" id="imagesOrder" />
+        <button type="submit" id="saveImagesOrder" class="bi bi-floppy btn btn-success btn-sm" disabled> Save order</button>
+        <small id="saveImagesOrderInfo" class="fst-italic bg-warning">No changes detected. Re-order the benefits to enable the save button.</small>
+    </form>
+    <table id="serviceImages" class="table">
+        <thead>
+            <tr>
+                <th style="width: 10px;">
+                    Order
+                </th>
+                <th>
+                    Image
+                </th>
+                <th>
+                    Description
+                </th>
+                <th>
+
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Service.ServiceImages)
+            {
+                <tr id="@item.Id">
+                    <td style="cursor: s-resize;">
+                        <span class="bi bi-arrow-down-up"> @item.Order</span>
+                    </td>
+                    <td>
+                        <img src="@item.ImageUrl" class="img-fluid rounded" alt="@item.Description" width="100" height="100">
+                    </td>
+                    <td>
+                        @item.Description
+                    </td>
+                    <td>
+                        <form method="post" asp-page-handler="DeleteImage">
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button type="submit" class="btn btn-small btn-danger bi bi-trash"> Delete Image</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<partial name="Partials/Images/_List" model="Model.Service.ServiceImages" />
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

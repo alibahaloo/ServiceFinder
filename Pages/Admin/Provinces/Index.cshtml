@@ -1,0 +1,42 @@
+﻿@page
+@model ServiceFinder.Pages.Admin.Provinces.IndexModel
+
+@{
+    ViewData["Title"] = "Provinces";
+    ViewData["PageMode"] = "List";
+
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<partial name="Partials/Buttons/_AddNewPartial" />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Provinces[0].Name)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Provinces) {
+            <tr class="align-middle">
+            <td>
+                    <a asp-page="./Details" asp-route-id="@item.Id">@item.Name</a>
+                </td>
+            <td>
+                    <a asp-page="./Edit" asp-route-id="@item.Id" class="bi bi-pencil-square btn btn-sm btn-warning"></a>
+                    <a asp-page="./Delete" asp-route-id="@item.Id" class="bi bi-trash btn btn-sm btn-danger"></a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+@{
+    var paginationModel = new Utility.ListPages { PageCount = Model.PageCount, Url = "Index" };
+}
+
+<partial name="_PaginationPartial" model="paginationModel" />

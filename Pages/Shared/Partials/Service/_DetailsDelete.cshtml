@@ -1,0 +1,383 @@
+﻿@using Microsoft.EntityFrameworkCore
+@model Data.Service
+@inject UserManager<ApplicationUser> UserManager
+@inject Repos.ReviewRepo _ReviewRepo
+@inject Repos.SubscriptionRepo _SubscriptionRepo
+@inject Repos.ServiceRepo _ServiceRepo
+@inject Repos.BookingRepo _BookingRepo
+@inject ApplicationDbContext _Context
+@{
+    var user = await UserManager.GetUserAsync(User);
+    var reviewsCount = await _ReviewRepo.GetCountByServiceAsync(Model.Id);
+
+    //Check for existing message thread
+    MessageThread? messageThread = null;
+    if (user != null)
+    {
+        messageThread = await _Context
+        .MessageThreads
+        .Where(mt => mt.ResourceType == MessageResourceType.Service
+            && mt.ResourceId == Model.Id
+            && mt.AddedById == user.Id
+            && mt.ArchivedOn == null).FirstOrDefaultAsync();
+    }
+
+    //Pagination for Reviews
+    string? curPageValue = Context.Request.Query["curPage"];
+    int curPage;
+    int pageCount;
+    if (!int.TryParse(curPageValue, out curPage))
+    {
+        curPage = 1;
+    }
+    //Getting reviews
+    Utility.PagedResult<Review>? reviewResult = null;
+    IList<Review>? productReviews = null;
+    reviewResult = await _ReviewRepo.GetAllByServiceAsync(curPage, Model.Id, 4);
+    productReviews = reviewResult.Data;
+    pageCount = reviewResult.PageCount;
+
+    string refererUrl;
+
+    if (Context.Request.Headers["Referer"].ToString() == "")
+    {
+        switch (user?.UserType)
+        {
+            case UserAccountRoles.Admin:
+                refererUrl = $"/Admin/Services/Index?providerId={Model.ServiceProviderId}";
+                break;
+            default:
+                refererUrl = $"/MyServices/Index";
+                break;
+        }
+    } else
+    {
+        refererUrl = Context.Request.Headers["Referer"].ToString();
+    }
+
+    var cancelBtn = new Data.InputModels.BackPartialModel { Url = refererUrl, Text = " Cancel" };
+}
+<style>
+    .table td {
+        background-color: transparent;
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="row">
+            <div class="d-flex align-items-center" style="width: 110px">
+                @{
+                    string? imgSrc;
+                }
+                @if (Model.ServiceProvider.ServiceProviderType == ServiceProviderType.Freelancer)
+                {
+                    if (Model.ServiceProvider.ProfileURL == null)
+                    {
+                        imgSrc = "/images/system/blank-profile-picture.png";
+                    }
+                    else
+                    {
+                        imgSrc = Model.ServiceProvider.ProfileURL;
+                    }
+                }
+                else
+                {
+                    if (Model.LogoUrl == null)
+                    {
+                        imgSrc = "/images/system/FS-Logo-Square.png";
+                    }
+                    else
+                    {
+                        imgSrc = Model.LogoUrl;
+                    }
+                }
+
+                <img src="@imgSrc" class="img-fluid rounded mx-auto" alt="Company Logo" width="100" height="100">
+            </div>
+            <div class="col">
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="me-2">@Model.Name</h1>
+                    </div>
+                </div>
+                <div class="row">
+                    @if (Model.ServiceProvider.ServiceProviderType == ServiceProviderType.RegisteredTrader)
+                    {
+                        <div class="col-6">
+                            <span class="bi bi-shield-check d-inline p-1 my-1 bg-success text-dark fw-bold"> Licensed Trader</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-12">
+                            <span class="text-success bi bi-patch-check my-1 fw-bold"> Verified Freelancer</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="row">
+                    <div class="col-6">
+                        @{
+                            var reviewCount = await _ReviewRepo.GetCountByServiceAsync(Model.Id);
+                            var averageRating = Math.Round(await _ReviewRepo.GetAverageRatingForServiceAsync(Model.Id), 1);
+
+                            int fullStars = (int)averageRating;
+                            int halfStar = averageRating - fullStars >= 0.1 ? 1 : 0;
+                            int emptyStars = 5 - fullStars - halfStar;
+                        }
+                        <div class="align-items-center fw-semibold">
+                            @for (int i = 0; i < fullStars; i++)
+                            {
+                                <span class="bi bi-star-fill"></span>
+                            }
+
+                            @if (halfStar == 1)
+                            {
+                                <span class="bi bi-star-half"></span>
+                            }
+
+                            @for (int i = 0; i < emptyStars; i++)
+                            {
+                                <span class="bi bi-star"></span>
+                            }
+                            <span> @averageRating</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        @{
+                            int bookingCount = await _BookingRepo.GetCountByServiceAsync(Model.Id, BookingStatus.Confirm);
+                        }
+                        <span class="bi bi-calendar-check fw-semibold">
+                            <span> @bookingCount Confirmed Bookings</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <span class="bi bi-calendar fw-semibold">
+                            <span> Active since: @Model.CreatedAt.ToShortDateString()</span>
+                        </span>
+                    </div>
+                    <div class="col-6">
+                        <span class="bi bi-hand-thumbs-up fw-semibold">
+                            <span> @reviewCount Review(s)</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<hr />
+<div class="row">
+    <div class="col-12">
+        @if (user != null)
+        {
+            @if (await _ServiceRepo.IsUserOwnerAsync(user.Id, Model.Id))
+            {
+                <div class="alert alert-warning fw-semibold text-uppercase" role="alert">
+                    You're the owner of this service
+                </div>
+                <a asp-page="/MyServices/UnavailableDate" asp-route-serviceId="@Model.Id" class="bi bi-calendar-week btn btn-info" role="button"> Set Service Availability</a>
+                <a class="btn btn-info bi bi-calendar-event" href="/Bookings/MyBookings?Input.ServiceId=@Model.Id" role="button"> View Bookings</a>
+                <a class="btn btn-info bi bi-envelope" href="/Messages/Inbox?Input.ServiceId=@Model.Id&Input.MessageResourceType=@MessageResourceType.Service" role="button"> View Messages</a>
+                <a asp-page="/Services/Edit" asp-route-id="@Model.Id" class="bi bi-pencil-square btn btn-warning" role="button"> Edit</a>
+                <a asp-page="/Services/Delete" asp-route-id="@Model.Id" class="bi bi-trash btn btn-danger" role="button"> Delete</a>
+            }
+            else
+            {
+                @if (user.UserType == UserAccountRoles.ServiceProvider)
+                {
+                    <div class="alert alert-danger fw-semibold text-uppercase" role="alert">
+                        Your current account is a 'Service Provider' -- you can interact with other services only as a `Customer`
+                    </div>
+                }
+                else
+                {
+                    @if (await _BookingRepo.GetExistingBookingAsync(Model.Id, user.Id) != null)
+                    {
+                        var activeBooking = await _BookingRepo.GetActiveBookingAsync(Model.Id, user.Id);
+
+                        <div class="alert alert-info fw-semibold text-uppercase" role="alert">
+                            You already have an open booking for this service.
+                        </div>
+                        <a class="bi bi-calendar-event btn btn-info" href="../Bookings/Details?Id=@activeBooking?.Id" role="button"> View Booking</a>
+                    }
+                    else
+                    {
+                        @if (await _SubscriptionRepo.IsUserAllowed(user.Id, SubscriptionFunctions.BookService, Model.Id))
+                        {
+                            <a class="bi bi-calendar-plus btn btn-primary" href="../Bookings/Create?serviceId=@Model.Id" role="button"> Book This Service</a>
+                        }
+                        else
+                        {
+                            <div class="alert alert-danger fw-semibold text-uppercase" role="alert">
+                                Your current subscription doesn't allow you to book services. Upgrade to book services.
+                            </div>
+                        }
+                    }
+
+
+                    @if (messageThread != null)
+                    {
+                        <a href="../Messages/Create?serviceId=@Model.Id&threadId=@messageThread.Id" class="bi bi-envelope-open btn btn-info" role="button"> View Messages</a>
+                    }
+                    else
+                    {
+                        @if (await _SubscriptionRepo.IsUserAllowed(user.Id, SubscriptionFunctions.SendMessage, Model.Id))
+                        {
+                            <a href="../Messages/Create?serviceId=@Model.Id" class="bi bi-envelope-plus btn btn-primary" role="button"> Send Message</a>
+                        }
+                        else
+                        {
+                            <div class="alert alert-danger fw-semibold text-uppercase" role="alert">
+                                Your current subscription doesn't allow you to send messages. Upgrade to send more.
+                            </div>
+                        }
+                    }
+
+                    //Check for existing review from this user
+                    var review = await _ReviewRepo.CheckExistingReviewByUser(user.Id, Model.Id);
+                    @if (review != null)
+                    {
+                        <a href="/Reviews/Details?Id=@review.Id" class="bi bi-hand-thumbs-up btn btn-info" role="button"> Open Review</a>
+                    }
+                    else
+                    {
+                        @if (await _SubscriptionRepo.IsUserAllowed(user.Id, SubscriptionFunctions.WriteReview, Model.Id))
+                        {
+                            <a class="bi bi-hand-thumbs-up btn btn-primary" href="../Reviews/Create?serviceId=@Model.Id" role="button"> Write A Review</a>
+                        }
+                        else
+                        {
+                            <div class="alert alert-danger fw-semibold text-uppercase" role="alert">
+                                Your current subscription doesn't allow you to write reviews. Upgrade to write one.
+                            </div>
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            <a class="bi bi-calendar-plus btn btn-primary" href="../Bookings/Create?serviceId=@Model.Id" role="button"> Book This Service</a>
+            <a class="bi bi-envelope-plus btn btn-primary" href="../Messages/Create?serviceId=@Model.Id" role="button"> Send Message</a>
+        }
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-8 col-md-7 py-3">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="bi bi-info-square text-uppercase"> Service Information</h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">@Model.Description</p>
+
+                <dl class="row">
+                    <dt class="col-sm-3">
+                        Categories
+                    </dt>
+                    <dd class="col-sm-7 fst-italic">
+                        @foreach (var serviceCategory in Model.ServiceCategories)
+                        {
+                            <span>@serviceCategory.Category.Name, </span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-3">
+                        Offering in cities
+                    </dt>
+                    <dd class="col-sm-7 fst-italic">
+                        @if (Model.ServiceCities != null)
+                        {
+                            @foreach (var serviceCity in Model.ServiceCities)
+                            {
+                                @if (serviceCity.City.Province != null)
+                                {
+                                    <span>@serviceCity.City.Name (@serviceCity.City.Province.Name), </span>
+                                }
+                            }
+                        }
+                    </dd>
+
+                    <dt class="col-sm-3">
+                        @Html.DisplayNameFor(model => model.YearsInBusiness)
+                    </dt>
+                    <dd class="col-sm-7 fst-italic">
+                        @Html.DisplayFor(model => model.YearsInBusiness)
+                    </dd>
+
+                    <dt class="col-sm-3">
+                        @Html.DisplayNameFor(model => model.HourlyRate)
+                    </dt>
+                    <dd class="col-sm-7 fst-italic">
+                        @Html.DisplayFor(model => model.HourlyRate)
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-5 py-3">
+        <partial name="Partials/ApplicationUser/_ProviderProfile" model="Model.ServiceProvider" />
+    </div>
+</div>
+
+@if (@ViewData["PageMode"]?.ToString() == "View")
+{
+
+    <div class="row">
+        <div class="col-sm-12 col-md-12 py-3">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-md-10">
+                            <h5 class="bi bi-image text-uppercase"> Images</h5>
+                            <p class="fst-italic m-0 p-0">Displaying some sample work from the service.</p>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            @if (user != null && await _ServiceRepo.IsUserOwnerAsync(user.Id, Model.Id))
+                            {
+                                <a asp-page="/MyServices/Images" asp-route-serviceId="@Model.Id" class="d-inline bi bi-image btn btn-sm btn-info"> Upload Images</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <partial name="Partials/Images/_List" model="Model.ServiceImages" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12 col-md-12 py-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="bi bi-hand-thumbs-up text-uppercase"> Reviews</h5>
+                    <p class="fst-italic m-0 p-0">Below is the list of reviews given by other customers. Explore them and see how other customer liked working with this service. Leave a review about this service and let other customers know about your experience.</p>
+                </div>
+                <div class="card-body">
+                    <partial name="Partials/Review/_List" model="productReviews" />
+                    @{
+                        var paginationModel = new Utility.ListPages { PageCount = pageCount, Url = "Details?Id=" + Model.Id + "&" };
+                    }
+
+                    <partial name="_PaginationPartial" model="paginationModel" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (@ViewData["PageMode"]?.ToString() == "Delete")
+{
+    <form method="post">
+        <input type="hidden" asp-for="Id" />
+        <partial name="Partials/Buttons/_DeletePartial" />
+        <partial name="Partials/Buttons/_BackPartial" model=cancelBtn />
+    </form>
+}

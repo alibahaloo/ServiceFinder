@@ -1,0 +1,129 @@
+﻿@model IList<Data.MessageThread>
+@inject UserManager<ApplicationUser> _UserManager
+@inject Repos.ServiceRepo _ServiceRepo
+@inject Repos.BookingRepo _BookingRepo
+@inject Repos.SupportTicketRepo _SupportTicketRepo
+@{
+    var user = await _UserManager.GetUserAsync(User);
+}
+
+@if (Model.Count > 0)
+{
+    <table class="table table-hover">
+        <thead>
+            <tr class="table-secondary">
+                <th scope="col" style="width: 25%;">Type</th>
+                <th scope="col" style="width: 25%;">Service</th>
+                <th scope="col" style="width: 25%;">Status</th>
+                <th scope="col" style="width: 25%;">Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr class="align-middle">
+                    @{
+                        string? serviceName = default!;
+                        string? serviceLink = default!;
+                        string? messageTitle = default!;
+                        string? messageIcon = default!;
+                        string? messageLink = default!;
+                        BookingStatus? bookingStatus = default!;
+                        SupportTicketStatus? supportTicketStatus = default!;
+                        bool bookingExpired = false;
+                        switch (item.ResourceType)
+                        {
+                            case MessageResourceType.Service:
+                                var service = await _ServiceRepo.GetEntityAsync(item.ResourceId);
+                                serviceName = service?.Name;
+                                serviceLink = $"/Services/Details?Id={service?.Id}";
+                                messageTitle = " Direct Messaging";
+                                messageIcon = "bi bi-envelope";
+                                messageLink = $"./Create?serviceId={service?.Id}&threadId={item.Id}";
+                                break;
+                            case MessageResourceType.Booking:
+                                var booking = await _BookingRepo.GetEntityAsync(item.ResourceId);
+                                serviceName = booking?.Service.Name;
+                                serviceLink = $"/Services/Details?Id={booking?.ServiceId}";
+                                bookingStatus = booking?.Status;
+                                bookingExpired = booking?.IsExpired ?? false;
+                                messageTitle = " Service Booking";
+                                messageIcon = "bi bi-calendar-event";
+                                messageLink = $"/Bookings/Details?id={item.ResourceId}";
+                                break;
+                            case MessageResourceType.SupportTicket:
+                                var supportTicket = await _SupportTicketRepo.GetSupportTicketById(item.ResourceId);
+                                serviceName = "Service Finder Support Team";
+                                serviceLink = "/ContactUs";
+                                supportTicketStatus = supportTicket?.Status;
+                                messageTitle = " Support Ticket";
+                                messageIcon = "bi bi-question-square";
+                                messageLink = $"/SupportTickets/Details?id={item.ResourceId}";
+                                break;
+                        }
+                        <td>
+                            <a href="@messageLink" class="@messageIcon">@messageTitle</a>
+                            @if (item.IsNew)
+                            {
+                                <span class="badge text-bg-danger">New Reply</span>
+                            }
+                            @if (user?.UserType == UserAccountRoles.ServiceProvider)
+                            {
+                                <div class="small fst-italic text-muted">
+                                    From: @item.AddedBy.FullName (@item.AddedBy.UserName)
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            <a href="@serviceLink" class="fst-italic">@serviceName</a>
+                        </td>
+                        <td>
+                        @{
+                            switch (bookingStatus)
+                            {
+                                case BookingStatus.Open:
+                                    <div class="d-inline-block bg-primary my-1 p-1 text-white text-uppercase">Open</div>
+                                    break;
+                                case BookingStatus.Confirm:
+                                    <div class="d-inline-block bg-success my-1 p-1 text-white text-uppercase">Confirmed</div>
+                                    break;
+                                case BookingStatus.Decline:
+                                    <div class="d-inline-block bg-danger my-1 p-1 text-white text-uppercase">Declined</div>
+                                    break;
+                            }
+                            if (bookingExpired)
+                            {
+                                <small class="bg-warning my-1 p-1 text-black text-uppercase">Expired</small>
+                            }
+
+                            switch (supportTicketStatus)
+                            {
+                                case SupportTicketStatus.Open:
+                                    <div class="d-inline-block bg-primary my-1 p-1 text-white text-uppercase">Open</div>
+                                    break;
+                                case SupportTicketStatus.Resolved:
+                                    <div class="d-inline-block bg-secondary my-1 p-1 text-white text-uppercase">Resolved</div>
+                                    break;
+                            }
+                        }
+                        </td>
+                    }
+                    <td>
+                        <small class="fst-italic text-muted">
+                            @item.CreatedAt
+                        </small>
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-info fw-semibold text-uppercase" role="alert">
+        No messages to display!
+    </div>
+}
+
+

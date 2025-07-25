@@ -1,0 +1,78 @@
+﻿@page
+@model ServiceFinder.Pages.SupportTickets.AdminModel
+
+@{
+    ViewData["Title"] = "Admin";
+}
+
+<h1 class="bi bi-question-square"> Support Tickets</h1>
+<hr />
+
+<form id="searchForm" method="get">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-control mb-3">
+                <label asp-for="Input.Search" class="control-label text-uppercase fw-semibold"></label>
+                <input asp-for="Input.Search" class="form-control" aria-required="true" placeholder="Search by full name or email address" />
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12 d-flex align-items-center">
+            <div class="form-control mb-3">
+                <label asp-for="Input.Status" class="control-label text-uppercase fw-semibold"></label>
+                <select asp-for="Input.Status" class="form-control" asp-items="Html.GetEnumSelectList<SupportTicketStatus>()"></select>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12 d-flex align-items-center">
+            <button id="searchSubmit" type="submit" class="bi bi-search btn btn-primary mx-1"> Apply Filter</button>
+            <a class="bi bi-x-lg btn btn-warning" href="/SupportTickets/Admin" role="button"> Reset</a>
+        </div>
+    </div>
+</form>
+
+<table class="table">
+    <tbody>
+@foreach (var item in Model.SupportTickets) {
+        <tr class="align-middle">
+            <td>
+                <a asp-page="./Details" asp-route-id="@item.Id" class="bi bi-question-square"> @item.User.FullName</a>
+                    @if (item.Status == SupportTicketStatus.Open)
+                    {
+                        <span class="d-inline p-1 bg-primary text-white">@item.Status</span>
+                    }
+                    else
+                    {
+                        <span class="d-inline p-1 bg-secondary text-white">@item.Status</span>
+                    }
+                <br />
+                <small class="text-muted">@item.EmailAddress</small>
+                <br />
+                <strong>Account Type: </strong> <span>@item.User.UserType</span>
+                    @if (item.User.UserType == UserAccountRoles.ServiceProvider)
+                    {
+                        switch (item.User.ServiceProviderType)
+                        {
+                            case ServiceProviderType.Freelancer:
+                                <small>(Freelancer)</small>
+                                break;
+                            case ServiceProviderType.RegisteredTrader:
+                                <small>(Registered Trader)</small>
+                                break;
+                        }
+                    }
+                @if (item.IsAccessRequest)
+                {
+                    <span class="bg-info text-uppercase p-1">Access Request</span>
+                }
+                <br />
+                    <small class="fst-italic text-muted">Created: @item.CreatedAt</small>
+                </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+@{
+    var paginationModel = new Utility.ListPages { PageCount = Model.PageCount, Url = "Admin" };
+}
+
+<partial name="_PaginationPartial" model="paginationModel" />

@@ -1,0 +1,132 @@
+﻿@model string
+@inject UserManager<ApplicationUser> UserManager
+@inject ServiceFinder.Repos.SubscriptionRepo _SubscriptionRepo
+@{
+    var subscriptions = _SubscriptionRepo.GetAll();
+
+    var user = await UserManager.FindByEmailAsync(Model);
+}
+
+@if (subscriptions.Count > 0)
+{
+    <div class="row row-cols-1 row-cols-md-3 g-3" data-masonry='{"percentPosition": true }'>
+        @foreach (var subscription in subscriptions)
+        {
+            <div class="col" style="height:500px">
+                <div class="card h-100">
+                    @if (user?.SubscriptionId == subscription.Id)
+                    {
+                        <div class="card-header fs-3 bg-success">
+                            @subscription.Name
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="card-header fs-3">
+                            @subscription.Name
+                        </div>
+                    }
+                    <div class="card-body overflow-auto">
+                        <strong class="text-success h5">As a Service Provider you get:</strong>
+                        <br />
+                        <span class="bi bi-building m-0 p-0"> Posted Services: </span>
+                        @if (@subscription.MaxServices == null)
+                        {
+                            <span>
+                                Unlimited
+                            </span>
+                        }
+                        else
+                        {
+                            <span>
+                                @subscription.MaxServices
+                            </span>
+                        }
+                        <hr />
+                        <strong class="text-success h5">As a Customer you get:</strong>
+                        <br />
+                        <span class="bi bi-envelope m-0 p-0"> Concurrent Messages Threads: </span>
+                        @if (@subscription.MaxMessages == null)
+                        {
+                            <span>
+                                Unlimited
+                            </span>
+                        }
+                        else
+                        {
+                            <span>
+                                @subscription.MaxMessages
+                            </span>
+                            
+                        }
+                        <br />
+                        @if (subscription.CanBookService)
+                        {
+                            <span class="bi bi-check-circle m-0 p-0"> Book Services</span>
+                            <br />
+                        }
+                        else
+                        {
+                            <span class="bi bi-x-circle m-0 p-0"> Book Services</span>
+                            <br />
+                        }
+
+                        @if (subscription.CanWriteReview)
+                        {
+                            <span class="bi bi-check-circle m-0 p-0"> Write Review</span>
+                            <br />
+                        }
+                        else
+                        {
+                            <span class="bi bi-x-circle m-0 p-0"> Write Review</span>
+                            <br />
+                        }
+
+                        @if (subscription.CanViewServiceContactInfo)
+                        {
+                            <span class="bi bi-check-circle m-0 p-0"> View Business's Direct Contact Info</span>
+                            <br />
+                        }
+                        else
+                        {
+                            <span class="bi bi-x-circle m-0 p-0"> View Business's Direct Contact Info</span>
+                            <br />
+                        }
+
+                        @if (subscription.CanViewProviderContactInfo)
+                        {
+                            <span class="bi bi-check-circle m-0 p-0"> View Business Owner's Contact Info</span>
+                            <br />
+                        }
+                        else
+                        {
+                            <span class="bi bi-x-circle m-0 p-0"> View Business Owner's Contact Info</span>
+                            <br />
+                        }
+
+                    </div>
+                    <div class="card-footer">
+                        <strong>Fee: </strong>
+                        <small class="text-muted">@subscription.Fee (CAD)</small>
+                        @if (user?.SubscriptionId == subscription.Id)
+                        {
+                            <span class="text-success p-0 m-0">(Your current subscription)</span>
+                        }
+                        else
+                        {
+                            @if (subscription.MustContactToApply)
+                            {
+                                <a class="btn btn-sm btn-success" href="/SupportTickets/Create">Contact Us</a>
+                            }
+                            else
+                            {
+                                <a class="btn btn-sm btn-success">Apply</a>
+                            }
+                        }
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

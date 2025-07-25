@@ -1,0 +1,32 @@
+﻿@page
+@model ServiceFinder.Pages.AboutUsModel
+@{
+    ViewData["Title"] = "About Us";
+}
+<h1>@ViewData["Title"]</h1>
+<div class="row text-center">
+    <div class="col-12 d-flex align-items-center justify-content-center">
+        <img src="/images/system/about-us.jpg" class="rounded img-fluid d-none d-md-block d-lg-block" alt="Contact Us" style="max-width: 50%;">
+        <img src="/images/system/about-us.jpg" class="rounded img-fluid d-block d-sm-none" alt="Contact Us">
+    </div>
+</div>
+<p class="fw-semibold lead">
+    Service Finder is your go-to destination for connecting with a wide range of local service providers in beautiful British Columbia, Canada. We're proud to serve cities like Vancouver, North Vancouver, West Vancouver and others.
+    <a href="../Identity/Account/Register">Join us</a> today and embark on your journey to find the services you need in your local city. Connect with trusted providers, and leave your own mark on our growing community.
+</p>
+<p class="fw-semibold lead">Your satisfaction is our priority, and we're here to make it easier than ever to find the right service for your needs.</p>
+<p class="fw-semibold lead"><strong>Explore, Connect, and Discover with Service Finder</strong></p>
+<div class="row text-center">
+    <div class="col-md-12">
+        <a href="/Services/Index" class="display-6 fw-semibold">Browse Local Services Now</a>
+    </div>
+</div>
+<hr />
+<div class="row text-center">
+    <div class="col-md-12">
+        <div class="alert alert-info fw-semibold h4" role="alert">
+            Are you a service provider seeking a platform to showcase your services in your city? <br />
+            <a href="/Identity/Account/Register?Type=Service%20Provider">Click here</a> to register your account for free and begin posting your services.
+        </div>
+    </div>
+</div>

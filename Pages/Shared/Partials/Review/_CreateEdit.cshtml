@@ -1,0 +1,100 @@
+﻿@{
+    string refererUrl;
+
+    if (Context.Request.Headers["Referer"].ToString().Contains("Create"))
+    {
+        refererUrl = $"/Services/Details?Id={Model.ServiceId}";
+    }
+    else
+    {
+        refererUrl = Context.Request.Headers["Referer"].ToString();
+    }
+
+    var backBtn = new Data.InputModels.BackPartialModel { Url = refererUrl, Text = " Cancel" };
+}
+@model Data.InputModels.Review
+@inject Repos.ReviewRepo _reviewRepo
+<style>
+    .pointer {
+        cursor: pointer;
+    }
+</style>
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Initialize state to track clicked stars
+        let clickedStars = 0;
+
+        // Function to update stars on hover
+        function updateStarsOnHover(starIndex) {
+            for (let i = 1; i <= 5; i++) {
+                const star = $(`#star_${i}`);
+
+                if (i <= starIndex) {
+                    star.removeClass('bi-star').addClass('bi-star-fill');
+                } else {
+                    star.removeClass('bi-star-fill').addClass('bi-star');
+                }
+            }
+        }
+
+        // Hover event handler
+        $('.bi-star').hover(function () {
+            const starIndex = $(this).attr('id').split('_')[1];
+            updateStarsOnHover(starIndex);
+        });
+
+        // Click event handler
+        $('.bi-star').click(function () {
+            clickedStars = $(this).attr('id').split('_')[1];
+            updateStarsOnHover(clickedStars);
+
+            // You can save the state here (e.g., send an AJAX request or store in a variable)
+            console.log('Clicked Stars:', clickedStars);
+            $('#starsValue').val(clickedStars);
+        });
+
+        // Reset stars on mouse leave
+        $('.bi-star').mouseleave(function () {
+            updateStarsOnHover(clickedStars);
+        });
+    });
+</script>
+
+<div class="row">
+    <div class="col-md-12">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="ServiceId" />
+            @if (Model is not null)
+            {
+                <input type="hidden" asp-for="Id" />
+            }
+            <div class="form-floating mb-3 align-items-center">
+                <span class="bi bi-star pointer h1" id="star_1"></span>
+                <span class="bi bi-star pointer h1" id="star_2"></span>
+                <span class="bi bi-star pointer h1" id="star_3"></span>
+                <span class="bi bi-star pointer h1" id="star_4"></span>
+                <span class="bi bi-star pointer h1" id="star_5"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Title" class="form-control" aria-required="true" />
+                <label asp-for="Title" class="control-label"></label>
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <textarea asp-for="Body" class="form-control" aria-required="true" style="height: 100px"> </textarea>
+                <label asp-for="Body" class="control-label">Review</label>
+                <span asp-validation-for="Body" class="text-danger"></span>
+            </div>
+            <input type="hidden" asp-for="Stars" id="starsValue" />
+            <partial name="Partials/Buttons/_CreatePartial" />
+            <partial name="Partials/Buttons/_BackPartial" model=backBtn />
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    }

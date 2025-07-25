@@ -1,0 +1,95 @@
+﻿@model Data.ApplicationUser
+@inject Repos.ReviewRepo _ReviewRepo
+@inject Repos.BookingRepo _BookingRepo
+@{
+}
+<div class="row">
+    <div class="col-sm-12 col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="bi bi-info-square text-uppercase"> Service Provider Profile</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <td width="200">
+                            @if (Model.ProfileURL != null)
+                            {
+                                <img src="@Model.ProfileURL" class="img-fluid rounded m-1" alt="User Profile Picture" width="200" height="200">
+                            }
+                            else
+                            {
+                                <img src="/images/system/blank-profile-picture.png" class="img-fluid rounded m-1" alt="User Profile Picture" width="200" height="200">
+                            }
+
+                        </td>
+                        <td>
+                            <p class="h4">
+                                <a href="/Services/Provider?id=@Model.Id">
+                                    @Html.DisplayFor(model => model.FullName)
+                                </a>
+                            </p>
+                            <div>
+                                <span class="text-success bi bi-patch-check"> Identity Verified</span>
+                            </div>
+                            <div>
+                                @if (Model.ServiceProviderType == ServiceProviderType.Freelancer)
+                                {
+                                    <span class="text-success bi bi-file-person"> Freelancer</span>
+                                } else
+                                {
+                                    <span class="text-success bi bi-buildings"> Registered Trader</span>
+                                }
+                            </div>
+                            <div class="align-items-center">
+                                @{
+                                    var reviewCount = await _ReviewRepo.GetCountByProviderAsync(Model.Id);
+                                    var averageRating = Math.Round(await _ReviewRepo.GetAverageRatingForProviderAsync(Model.Id), 1);
+
+                                    int fullStars = (int)averageRating;
+                                    int halfStar = averageRating - fullStars >= 0.1 ? 1 : 0;
+                                    int emptyStars = 5 - fullStars - halfStar;
+                                }
+
+                                @for (int i = 0; i < fullStars; i++)
+                                {
+                                    <small class="bi bi-star-fill"></small>
+                                }
+
+                                @if (halfStar == 1)
+                                {
+                                    <small class="bi bi-star-half"></small>
+                                }
+
+                                @for (int i = 0; i < emptyStars; i++)
+                                {
+                                    <small class="bi bi-star"></small>
+                                }
+                                <small> @averageRating</small>
+                            </div>
+                            <div>
+                                <small class="fst-italic bi bi-hand-thumbs-up">
+                                    <a> @reviewCount Review(s)</a>
+                                </small>
+                            </div>
+                            <div>
+                                @{
+                                    int bookingCount = await _BookingRepo.GetCountByProviderAsync(Model.Id, BookingStatus.Confirm);
+                                }
+                                <small class="fst-italic bi bi-calendar-check">
+                                    <a> @bookingCount Confirmed Bookings</a>
+                                </small>
+                            </div>
+                            @if (Model.JoinedOn > DateTime.MinValue)
+                            {
+                                <div>
+                                    <small class="bi bi-calendar"> Joined since: @Model.JoinedOn.ToShortDateString()</small>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

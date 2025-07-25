@@ -1,0 +1,34 @@
+﻿@page
+@model ServiceFinder.Pages.Bookings.DeleteModel
+@inject UserManager<ApplicationUser> _UserManager
+@inject Repos.BookingRepo _BookingRepo
+@{
+    ViewData["Title"] = "Cancel Booking";
+    ViewData["PageMode"] = "Delete";
+    var curUser = await _UserManager.GetUserAsync(User);
+
+    var backBtn = new Data.InputModels.BackPartialModel();
+    backBtn.Url = $"/Bookings/Details?Id={Model.Booking.Id}";
+    backBtn.Text = " Cancel";
+}
+<h1 class="bi bi-calendar-x"> @ViewData["Title"]</h1>
+<hr />
+<div class="container py-2">
+    <div class="row" data-masonry='{"percentPosition": true }'>
+        <div class="col-sm-6 col-md-6 py-3">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Details</h3>
+                    <hr />
+                    <partial name="Partials/Booking/_DetailsCard" model="@Model.Booking" />
+                    <form method="post">
+                        <input type="hidden" asp-for="Booking.Id" />
+                        <partial name="Partials/Buttons/_DeletePartial" />
+                        <partial name="Partials/Buttons/_BackPartial" model=backBtn />
+                    </form>
+                </div>
+            </div>
+        </div>
+        <partial name="Partials/Messages/_ResourceComms" model="new Data.InputModels.Message { ResourceId = Model.Booking.Id, ResourceType = MessageResourceType.Booking, ThreadId = Model.MessageThread?.Id, IsEnabled = false}" />
+    </div>
+</div>

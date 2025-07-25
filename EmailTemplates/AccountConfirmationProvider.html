@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Account Confirmation</title>
+</head>
+<body style="background-color: #212529; color: white;">
+
+    <div style="text-align:center;">
+        <img src="/images/system/FS-Logo.png" alt="{{BaseAppName}}" style="width:50%; margin-top: 50px;">
+    </div>
+
+    <div id="container" style="border: 1px solid #ccc; margin: 30px; padding: 30px;">
+        <h1 style="text-align:center">Account Confirmation</h1>
+        <p>Hi there,</p>
+        <p>Thank you for signing up!</p>
+        <p>Use the link below to confirm your email address and activate your account and gain access to {{BaseAppName}}</p>
+        <a href="{{ConfirmationLink}}" style="color: #0d6efd;">Confirm Email Address </a>
+        <p>Since you've registered with us a Service Provider, you'll need to submit a access request to be able to post services. You will be automatically redirected to the "access request form" after you've confirmed your email and log in to the plaform, however if for any reason you don't submit yoru request your submission right away, you can use the link below to submit your request later and our admin team will review and give approval accordingly.</p>
+        <a href="{{VerificationLink}}" style="color: #0d6efd;">Submit Access Request </a>
+        <p>Thank you for using our services!</p>
+        <p style="margin: 0;">Best regards,</p>
+        <p style="margin: 0;">Your support team at <a href="{{BaseURL}}/" style="color: #0d6efd;">{{BaseAppName}}</a></p>
+    </div>
+
+    <p style="margin: 0; font-size: smaller; font-style: italic;">This email was sent automatically from {{BaseAppName}} platform. Have any questions? <a href="{{BaseURL}}/ContactUs" style="color: #0d6efd;">Contact Us</a></p>
+
+</body>
+</html>

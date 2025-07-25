@@ -1,0 +1,15 @@
+﻿@page
+@model ServiceFinder.Pages.Services.ProviderModel
+@{
+    ViewData["Title"] = $"{Model.ServiceProvider.FullName}";
+    ViewData["PageMode"] = "Service Provider";
+}
+
+<partial name="Partials/ApplicationUser/_DetailsDelete" model="Model.ServiceProvider" />
+
+<div class="py-3">
+    <h4>Services</h4>
+    <p class="fst-italic" style="margin: 0">Below is the list of services offered by this provider</p>
+</div>
+
+<partial name="Partials/Service/_List" model="Model.Services" />

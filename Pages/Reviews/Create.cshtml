@@ -1,0 +1,13 @@
+﻿@page
+@model ServiceFinder.Pages.Reviews.CreateModel
+
+@{
+    ViewData["Title"] = "Write A Review";
+    ViewData["PageMode"] = "Create";
+
+}
+<h1 class="bi bi-hand-thumbs-up"> @ViewData["Title"]</h1>
+<p class="fw-bold m-0">Write a review about <a href="/Services/Details?id=@Model.Service.Id">'@Model.Service.Name'</a> service and describe your experience:</p>
+<hr />
+
+<partial name="Partials/Review/_CreateEdit" model="Model.Input" />

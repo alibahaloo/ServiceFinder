@@ -1,0 +1,46 @@
+﻿@page
+@model ServiceFinder.Pages.Messages.InboxModel
+@{
+    ViewData["Title"] = "Inbox (Active Messages)";
+    ViewData["PageMode"] = "Inbox";
+}
+
+<h1 class="bi bi-envelope"> @ViewData["Title"]</h1>
+<span class="text-uppercase fw-bold">Menu: </span>
+<br />
+<a class="text-dark bi bi-envelope" href="/Messages/Inbox"> Inbox</a> |
+<a class="text-dark bi bi-envelope-x" href="/Messages/Archived"> Archived</a>
+<p class="fw-semibold m-0">
+    Explore the list of your active message threads:
+</p>
+
+<hr />
+
+<form id="searchForm" method="get">
+    <div class="row">
+        <div class="col-md-4 col-sm-12 d-flex align-items-center">
+            <div class="form-control mb-3">
+                <label asp-for="Input.ServiceId" class="control-label text-uppercase fw-semibold"></label>
+                <select asp-for="Input.ServiceId" class="form-control" asp-items="ViewBag.ServiceId"></select>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12 d-flex align-items-center">
+            <div class="form-control mb-3">
+                <label asp-for="Input.MessageResourceType" class="control-label text-uppercase fw-semibold"></label>
+                <select asp-for="Input.MessageResourceType" class="form-control" asp-items="Html.GetEnumSelectList<MessageResourceType>()"></select>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12 d-flex align-items-center">
+            <button id="searchSubmit" type="submit" class="bi bi-search btn btn-primary mx-1"> Apply Filter</button>
+            <a class="bi bi-x-lg btn btn-warning" href="/Messages/Inbox" role="button"> Reset</a>
+        </div>
+    </div>
+</form>
+<hr />
+<partial name="Partials/Messages/_List" model="Model.MessageThreads" />
+
+@{
+    var paginationModel = new Utility.ListPages { PageCount = Model.PageCount, Url = "Index" };
+}
+
+<partial name="_PaginationPartial" model="paginationModel" />

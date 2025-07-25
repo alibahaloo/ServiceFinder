@@ -1,0 +1,44 @@
+﻿@inject Repos.ProvinceRepo _provinceRepo
+@model Data.InputModels.City
+
+@{
+    ViewData["ProvinceId"] = new SelectList(_provinceRepo.GetAll(), "Id", "Name");
+    var backPartialModel = new Data.InputModels.BackPartialModel { Url = "./Index", Text = " Cancel" };
+}
+<h1>@ViewData["Title"]</h1>
+<h4>City</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @if (Model is not null)
+            {
+                <input type="hidden" asp-for="Id" />
+            }
+            <div class="form-floating mb-3">
+                <input asp-for="Name" class="form-control" aria-required="true" />
+                <label asp-for="Name">Name</label>
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <select asp-for="ProvinceId" class="form-control" asp-items="ViewBag.ProvinceId"></select>
+                <label asp-for="ProvinceId">Province </label>
+                <span asp-validation-for="ProvinceId" class="text-danger"></span>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" asp-for="IsNavItem" />
+                <label class="form-check-label" asp-for="IsNavItem">@Html.DisplayNameFor(model => model.IsNavItem)</label>
+                <span asp-validation-for="IsNavItem" class="text-danger"></span>
+            </div>
+            <partial name="Partials/Buttons/_CreatePartial" />
+            <partial name="Partials/Buttons/_BackPartial" model=backPartialModel />
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

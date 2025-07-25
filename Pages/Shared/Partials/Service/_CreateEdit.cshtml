@@ -1,0 +1,415 @@
+﻿@model Data.InputModels.Service
+@inject Repos.CityRepo _cityRepo
+@inject Repos.ServiceCategoryRepo _serviceCategoryRepo
+@inject UserManager<ApplicationUser> _userManager
+@{
+    string headerIcon = "bi bi-building-add";
+    if (ViewData["PageMode"]?.ToString() == "Edit")
+    {
+        headerIcon = "bi bi-pencil-square";
+    }
+
+    ApplicationUser? serviceProvider = null;
+    if (Model?.ServiceProviderId != null)
+    {
+        serviceProvider = await _userManager.FindByIdAsync(Model.ServiceProviderId);
+    } 
+
+    if (serviceProvider != null)
+    {
+        ViewData["CityId"] = new SelectList(_cityRepo.GetAll(), "Id", "Name", serviceProvider.CityId);
+    } else
+    {
+        ViewData["CityId"] = new SelectList(_cityRepo.GetAll(), "Id", "Name");
+    }
+
+    var curUser = await _userManager.GetUserAsync(User);
+
+    var availableCities = _cityRepo.GetAll();
+    List<int>? selectedCities = new();
+
+    if (Model is not null && Model.ServiceCities is not null)
+    {
+        selectedCities = Model.ServiceCities.Select(c => c.CityId).ToList();
+    }
+
+    var availableServiceCategories = _serviceCategoryRepo.GetAll();
+    List<int>? selectedCategories = new();
+
+    if (Model is not null && Model.ServiceCategories is not null)
+    {
+        selectedCategories = Model.ServiceCategories.Select(c => c.CategoryId).ToList();
+    }
+
+    string refererUrl;
+
+    if (Context.Request.Headers["Referer"].ToString() == "" || Context.Request.Headers["Referer"].ToString().Contains("Create"))
+    {
+        switch (curUser?.UserType)
+        {
+            case UserAccountRoles.Admin:
+                refererUrl = $"/Admin/Services/Index?providerId={Model?.ServiceProviderId}";
+                break;
+            default:
+                refererUrl = $"/MyServices/Index";
+                break;
+        }
+    }
+    else if (Context.Request.Headers["Referer"].ToString().Contains("Edit")) {
+        switch (curUser?.UserType)
+        {
+            case UserAccountRoles.Admin:
+                refererUrl = $"/Admin/Services/Index?providerId={Model?.ServiceProviderId}";
+                break;
+            default:
+                refererUrl = $"/Services/Details?id={Model?.Id}";
+                break;
+        }
+    } else
+    {
+        refererUrl = Context.Request.Headers["Referer"].ToString();
+    }
+
+    var cancelBtn = new Data.InputModels.BackPartialModel { Url = refererUrl, Text = " Cancel" }; 
+}
+
+<script>
+    $(document).ready(function () {
+        // Disable the button by default
+        $("#uploadLogo").prop("disabled", true);
+
+        $("#businessLogo").change(function () {
+            var fileInput = $(this)[0];
+            var file = fileInput.files[0];
+
+            // Enable the button if a file is selected, otherwise disable it
+            $("#uploadLogo").prop("disabled", !file);
+        });
+
+        //Remove logo button
+        $("#deleteLogo").click(function () {
+            $("#logoPreview").attr("src", "/images/system/FS-Logo-Square.png");
+            $("#serviceLogoURL").val("");
+            $('#deleteLogo').addClass('d-none');
+        });
+
+        $("#uploadLogo").click(function () {
+            var fileInput = $("#businessLogo")[0];
+            var file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a file");
+                return;
+            }
+
+            $("#uploadModal").modal("show");
+
+            // Disable the button and change label during upload
+            var uploadButton = $(this); // store a reference to 'this'
+            uploadButton.prop("disabled", true).text("Uploading...");
+
+            $("#uploadProgressBar").removeClass('d-none');
+            $("#uploadResult").addClass('d-none');
+
+            var formData = new FormData();
+            formData.append("businessLogo", file);
+
+            $.ajax({
+                url: "/api/ServiceLogo/uploadLogo",
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    console.log(response);
+
+                    // Enable the button and reset label on success
+                    uploadButton.prop("disabled", false).text("Upload");
+
+                    // Update image source on success
+                    $("#logoPreview").attr("src", response.fileUrl);
+                    $("#serviceLogoURL").val(response.fileUrl);
+
+                    //Show the delete button
+                    $('#deleteLogo').removeClass('d-none');
+                    $("#btnCloseModal").removeClass('d-none');
+                    $("#uploadResult").text(response.message).addClass("text-success").removeClass("d-none text-danger");
+                    $("#uploadProgressBar").addClass('d-none');
+                },
+                error: function (error) {
+                    console.error(error);
+
+                    // Enable the button and reset label on error
+                    uploadButton.prop("disabled", false).text("Upload");
+
+                    $("#btnCloseModal").removeClass('d-none');
+                    $("#uploadResult").text(error.responseJSON.message).removeClass("d-none text-success").addClass("text-danger");
+                    $("#uploadProgressBar").addClass('d-none');
+                }
+            });
+        });
+    });
+</script>
+
+<div class="modal fade" id="uploadModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5 text-info" id="staticBackdropLabel">Uploading Logo</h1>
+            </div>
+            <div class="modal-body">
+                <p class="text-info">Your logo is being uploaded. Please wait ... </p>
+                <p class="text-muted">You will get a notification once the upload is finished.</p>
+                <div class="d-flex justify-content-center" id="uploadProgressBar">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <p id="uploadResult"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="btnCloseModal" type="button" class="btn btn-success d-none" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<h1 class="@headerIcon"> @ViewData["Title"]</h1>
+
+<hr />
+<form method="post">
+    <div class="row">
+        <div class="col-md-6">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @if (Model != null && Model.Id != 0)
+            {
+                <input type="hidden" asp-for="Id" />
+            }
+
+            <input type="hidden" asp-for="ServiceProviderId" value="@Model?.ServiceProviderId" />
+            
+            @if (serviceProvider != null && serviceProvider.ServiceProviderType == ServiceProviderType.RegisteredTrader)
+            {
+                <p class="h5 text-uppercase fw-semibold">Logo:</p>
+                <div class="input-group mb-3">
+                    <input type="file" class="form-control" id="businessLogo" name="businessLogo">
+                    <button type="button" class="btn btn-primary" id="uploadLogo" disabled>Upload</button>
+                    <input id="serviceLogoURL" type="hidden" asp-for="LogoUrl" value="@Model?.LogoUrl" />
+                </div>
+
+                <div class="form-floating mb-3 text-center">
+                    <strong>Logo Preview</strong>
+                    <br />
+                    @if (Model?.LogoUrl == null)
+                    {
+                        <img id="logoPreview" src="/images/system/FS-Logo-Square.png" class="img-fluid rounded m-1 p-1" alt="Business Logo" width="100" height="100">
+                        <br />
+                        <button type="button" class="btn-sm btn btn-warning bi bi-x d-none" id="deleteLogo"> Delete Logo</button>
+                    } else
+                    {
+                        <img id="logoPreview" src="@Model?.LogoUrl" class="img-fluid rounded m-1 p-1" alt="Business Logo" width="100" height="100">
+                        <br />
+                        <button type="button" class="btn-sm btn btn-warning bi bi-x" id="deleteLogo"> Delete Logo</button>
+                    }
+                
+                </div>
+            }
+            <p class="h5 text-uppercase fw-semibold">Service Basic Information:</p>
+            <div class="form-floating mb-3">
+                @if (serviceProvider != null && serviceProvider.ServiceProviderType == ServiceProviderType.Freelancer)
+                {
+                    <input asp-for="Name" class="form-control" aria-required="true" value="@serviceProvider.FullName"/>
+                    <label asp-for="Name">Service Title</label>
+                } else
+                {
+                    <input asp-for="Name" class="form-control" aria-required="true" />
+                    <label asp-for="Name">Business Title</label>
+                }
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <textarea asp-for="Description" class="form-control" style="height: 100px"> </textarea>
+                <label asp-for="Description" class="control-label"></label>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <div class="form-floating mb-3">
+                        <input asp-for="YearsInBusiness" class="form-control" />
+                        <label asp-for="YearsInBusiness" class="control-label"></label>
+                        <span asp-validation-for="YearsInBusiness" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-floating mb-3">
+                        <input asp-for="HourlyRate" class="form-control" />
+                        <label asp-for="HourlyRate" class="control-label"></label>
+                        <span asp-validation-for="HourlyRate" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Website" class="form-control" />
+                <label asp-for="Website" class="control-label">Website (optional)</label>
+                <span asp-validation-for="Website" class="text-danger"></span>
+            </div>
+            <hr />
+            <div class="form-floating mb-3">
+                <p class="h5 text-uppercase fw-semibold">Applicable service categories:</p>
+                @if (Model == null)
+                {
+                    @foreach (var category in availableServiceCategories)
+                    {
+                        <div class="form-check form-switch form-check-inline">
+                            <input class="form-check-input" name="SelectedCategoryIds" id="category_@category.Id" type="checkbox" value="@category.Id" />
+                            <label class="form-check-label" for="category_@category.Id">@category.Name</label>
+                        </div>
+                    }
+                }
+                else
+                {
+                    @foreach (var category in availableServiceCategories)
+                    {
+                        @if (selectedCategories.Contains(category.Id))
+                        {
+                            <div class="form-check form-switch form-check-inline">
+                                <input class="form-check-input" name="SelectedCategoryIds" id="category_@category.Id" type="checkbox" value="@category.Id" checked />
+                                <label class="form-check-label" for="category_@category.Id">@category.Name</label>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-check form-switch form-check-inline">
+                                <input class="form-check-input" name="SelectedCategoryIds" id="category_@category.Id" type="checkbox" value="@category.Id" />
+                                <label class="form-check-label" for="category_@category.Id">@category.Name</label>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+            <hr />
+            <div class="form-floating mb-3">
+                <p class="h5 text-uppercase fw-semibold">Offering Cities:</p>
+                @if (Model == null)
+                {
+                    @foreach (var city in availableCities)
+                    {
+                        <div class="form-check form-switch form-check-inline">
+                            <input class="form-check-input" name="SelectedCitiesIds" id="city_@city.Id" type="checkbox" value="@city.Id" />
+                            <label class="form-check-label" for="city_@city.Id">@city.Name</label>
+                        </div>
+                    }
+                }
+                else
+                {
+                    @foreach (var city in availableCities)
+                    {
+                        @if (selectedCities.Contains(city.Id))
+                        {
+                            <div class="form-check form-switch form-check-inline">
+                                <input class="form-check-input" name="SelectedCitiesIds" id="city_@city.Id" type="checkbox" value="@city.Id" checked />
+                                <label class="form-check-label" for="city_@city.Id">@city.Name</label>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-check form-switch form-check-inline">
+                                <input class="form-check-input" name="SelectedCitiesIds" id="city_@city.Id" type="checkbox" value="@city.Id" />
+                                <label class="form-check-label" for="city_@city.Id">@city.Name</label>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+            <hr />
+        </div>
+        <div class="col-md-6">
+            @if (serviceProvider != null && serviceProvider.ServiceProviderType == ServiceProviderType.RegisteredTrader)
+            {
+                <p class="h5 text-uppercase fw-semibold">Business Contact Details:</p>
+            }
+            <div class="form-floating mb-3">
+                @if (serviceProvider != null && serviceProvider.ServiceProviderType == ServiceProviderType.Freelancer)
+                {
+                    <input asp-for="Email" type="hidden" value="@serviceProvider.Email" />
+                } else
+                {
+                    <input asp-for="Email" class="form-control" />
+                    <label asp-for="Email" class="control-label"></label>
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                }
+                
+            </div>
+            <div class="form-floating mb-3">
+                @if (serviceProvider != null && serviceProvider.ServiceProviderType == ServiceProviderType.Freelancer)
+                {
+                    <input asp-for="PhoneNumber" type="hidden" value="@serviceProvider.PhoneNumber" />
+                }
+                else
+                {
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <label asp-for="PhoneNumber">Phone Number</label>
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                }
+                
+            </div>
+            <div class="form-floating mb-3">
+                @if (serviceProvider != null && serviceProvider.ServiceProviderType == ServiceProviderType.Freelancer)
+                {
+                    <input asp-for="PostalCode" type="hidden" value="@serviceProvider.PostalCode" />
+                }
+                else
+                {
+                    <input asp-for="PostalCode" class="form-control" />
+                    <label asp-for="PostalCode" class="control-label"></label>
+                    <span asp-validation-for="PostalCode" class="text-danger"></span>
+                }
+            </div>
+            <div class="form-floating mb-3">
+                @if (serviceProvider != null && serviceProvider.ServiceProviderType == ServiceProviderType.Freelancer)
+                {
+                    <input asp-for="AddressLine1" type="hidden" value="@serviceProvider.AddressLine1" />
+                }
+                else
+                {
+                    <input asp-for="AddressLine1" class="form-control" />
+                    <label asp-for="AddressLine1" class="control-label"></label>
+                    <span asp-validation-for="AddressLine1" class="text-danger"></span>
+                }
+            </div>
+            <div class="form-floating mb-3">
+                @if (serviceProvider != null && serviceProvider.ServiceProviderType == ServiceProviderType.Freelancer)
+                {
+                    <input asp-for="AddressLine2" type="hidden" value="@serviceProvider.AddressLine2" />
+                }
+                else
+                {
+                    <input asp-for="AddressLine2" class="form-control" />
+                    <label asp-for="AddressLine2" class="control-label"></label>
+                    <span asp-validation-for="AddressLine2" class="text-danger"></span>
+                }
+            </div>
+            <div class="form-floating mb-3">
+                @if (serviceProvider != null && serviceProvider.ServiceProviderType == ServiceProviderType.Freelancer)
+                {
+                    <input asp-for="CityId" type="hidden" value="@serviceProvider.CityId" />
+                }
+                else
+                {
+                    <select asp-for="CityId" class="form-control" asp-items="ViewBag.CityId"></select>
+                    <label asp-for="CityId" class="control-label"></label>
+                }
+            </div>
+            <button type="submit" class="bi bi-save btn btn-primary" onClick="this.disabled=true; this.innerText=' Saving …'; this.form.submit();"> Save Service</button>
+            <partial name="Partials/Buttons/_BackPartial" model=cancelBtn />
+        </div>
+    </div>
+</form>
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

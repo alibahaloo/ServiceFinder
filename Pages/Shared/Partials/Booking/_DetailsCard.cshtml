@@ -1,0 +1,84 @@
+﻿@model Data.Booking
+@inject UserManager<ApplicationUser> _UserManager
+@{
+    var curUser = await _UserManager.GetUserAsync(User);
+    if (curUser == null) { throw new InvalidDataException("User is null"); }
+}
+
+<dl class="row">
+    <dt class="col-sm-3">
+        @Html.DisplayNameFor(model => model.Description)
+    </dt>
+    <dd class="col-sm-9">
+        @Html.DisplayFor(model => model.Description)
+    </dd>
+    <dt class="col-sm-3">
+        @Html.DisplayNameFor(model => model.Service)
+    </dt>
+    <dd class="col-sm-9">
+        <a href="../Services/Details?Id=@Model.ServiceId">@Html.DisplayFor(model => model.Service.Name)</a>
+    </dd>
+    <dt class="col-sm-3">
+        @Html.DisplayNameFor(model => model.StartDate)
+    </dt>
+    <dd class="col-sm-9">
+        @Html.DisplayFor(model => model.StartDate)
+        @if (Model.IsExpired)
+        {
+            <span class="d-inline p-1 bg-warning text-black text-uppercase">Expired</span>
+        }
+    </dd>
+    <dt class="col-sm-3">
+        @Html.DisplayNameFor(model => model.NumberOfHours)
+    </dt>
+    <dd class="col-sm-9">
+        @Html.DisplayFor(model => model.NumberOfHours)
+    </dd>
+    <dt class="col-sm-3">
+        @Html.DisplayNameFor(model => model.Status)
+    </dt>
+    <dd class="col-sm-9">
+        @if (Model.Status == BookingStatus.Open)
+        {
+            <span class="d-inline p-1 bg-primary text-white text-uppercase">@Model.Status</span>
+            @if (Model.IsExpired)
+            {
+                <small class="bg-warning text-black fst-italic p-1">No Respond In Time</small>
+            }
+        }
+        else if (Model.Status == BookingStatus.Confirm)
+        {
+            <span class="d-inline p-1 bg-success text-white text-uppercase">Confirmed</span>
+        }
+        else
+        {
+            <span class="d-inline p-1 bg-danger text-white text-uppercase">Declined</span>
+        }
+    </dd>
+    @if (curUser?.UserType == UserAccountRoles.ServiceProvider)
+    {
+        <dt class="col-sm-3">
+            @Html.DisplayNameFor(model => model.AddedBy)
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.AddedBy.FullName)
+        </dd>
+    }
+    <dt class="col-sm-3">
+        @Html.DisplayNameFor(model => model.CreatedAt)
+    </dt>
+    <dd class="col-sm-9">
+        @Html.DisplayFor(model => model.CreatedAt)
+    </dd>
+    @if (Model.UpdatedAt != DateTime.MinValue)
+    {
+        <dt class="col-sm-3">
+            @Html.DisplayNameFor(model => model.UpdatedAt)
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => model.UpdatedAt)
+        </dd>
+    }
+</dl>
+
+

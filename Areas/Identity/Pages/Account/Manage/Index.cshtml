@@ -1,0 +1,106 @@
+﻿@page
+@model IndexModel
+@inject UserManager<ApplicationUser> _UserManager
+@{
+    var user = await _UserManager.GetUserAsync(User);
+    ViewData["Title"] = "Profile";
+    ViewData["ActivePage"] = ManageNavPages.Index;
+}
+
+<h3>@ViewData["Title"]</h3>
+<partial name="_StatusMessage" for="StatusMessage" />
+<div class="row">
+    <div class="col-md-8">
+        <form id="profile-form" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+            <label style="font-weight: bold" class="control-label">Your Account Type:</label>
+            <p>@Model.UserType</p>
+            @if (Model.UserType == UserAccountRoles.ServiceProvider)
+            {
+                <div class="form-control mb-3">
+                    <label asp-for="Input.ServiceProviderType" class="control-label text-uppercase fw-semibold">Select One:</label>
+                    <select asp-for="Input.ServiceProviderType" class="form-control">
+                        <option value="@ServiceProviderType.Freelancer">Freelancer</option>
+                        <option value="@ServiceProviderType.RegisteredTrader">Registered Trader</option>
+                    </select>
+                </div>
+
+                <strong>Freelancer: </strong>
+                <p class="text-small fst-italic">
+                    A Freelancer on our platform is an independent and skilled service provider who offers services without the requirement of holding a business license or formal registration. Freelancers operate on a flexible basis, providing their expertise in various fields, from creative endeavors to professional services. They bring a personalized touch to their work and offer customers the flexibility to choose and book services without the constraints of a formal business structure.
+                </p>
+
+                <strong>Registered Trader: </strong>
+                <p class="text-small fst-italic">
+                    A Registered Trader on our platform is a professional service provider who has taken the step of legally registering a business under their name. This type of service provider is committed to operating under the legal framework, and during the registration process, they are required to provide a valid business license for verification. Customers engaging with Registered Traders can trust in the legitimacy of the business entity, as it has undergone the formalities of business registration, ensuring transparency and professionalism in service delivery.
+                </p>
+            }
+            <div class="form-floating mb-3">
+                <input asp-for="Username" class="form-control" placeholder="Please choose your username." disabled />
+                <label asp-for="Username" class="form-label"></label>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.FullName" class="form-control" aria-required="true" placeholder="John Doe" />
+                <label asp-for="Input.FullName">Full Name</label>
+                <span asp-validation-for="Input.FullName" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number."/>
+                <label asp-for="Input.PhoneNumber" class="form-label"></label>
+                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.AddressLine1" class="form-control" aria-required="true" placeholder="123 - 45th Street" />
+                <label asp-for="Input.AddressLine1">Address Line 1</label>
+                <span asp-validation-for="Input.AddressLine1" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.AddressLine2" class="form-control" aria-required="false" placeholder="optional" />
+                <label asp-for="Input.AddressLine2">Address Line 2</label>
+                <span asp-validation-for="Input.AddressLine2" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.PostalCode" class="form-control" aria-required="true" placeholder="optional" />
+                <label asp-for="Input.PostalCode">Postal Code</label>
+                <span asp-validation-for="Input.PostalCode" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <select asp-for="Input.CityId" class="form-control" asp-items="ViewBag.CityId"></select>
+                <label asp-for="Input.CityId" class="control-label"></label>
+            </div>
+            <br />
+            <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+        </form>
+    </div>
+    <div class="col-md-4">
+        <form method="post" asp-page-handler="UploadImage" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-12">
+                    <input type="hidden" name="userId" value="@user?.Id" />
+                    <strong>Profile Picture: </strong>
+                    <div class="input-group">
+                        <input type="file" class="form-control" id="image" name="image">
+                        <button type="submit" class="btn btn-sm btn-primary bi bi-floppy"> Upload</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <div class="text-center">
+            @if (Model.ProfilePictureURL != null)
+            {
+                <img src="@Model.ProfilePictureURL" class="img-fluid rounded m-1" alt="User Profile Picture" width="200" height="200">
+                <form method="post" asp-page-handler="DeleteImage" enctype="multipart/form-data">
+                    <button type="submit" class="btn btn-sm btn-danger bi bi-trash"> Remove Profile Picture</button>
+                </form>
+            }
+            else
+            {
+                <img src="/images/system/blank-profile-picture.png" class="img-fluid rounded m-1" alt="User Profile Picture" width="200" height="200">
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

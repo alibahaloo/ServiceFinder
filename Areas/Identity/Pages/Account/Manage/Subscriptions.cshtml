@@ -1,0 +1,11 @@
+﻿@page
+@inject UserManager<ApplicationUser> _UserManager;
+@model ServiceFinder.Areas.Identity.Pages.Account.Manage.SubscriptionsModel
+@{
+    ViewData["Title"] = "Subscription";
+    ViewData["ActivePage"] = ManageNavPages.Subscription;
+    var user = await _UserManager.GetUserAsync(User);
+}
+
+<h2>Select Your Subscription</h2>
+<partial name="Partials/Subscription/_Select" model="user?.Email" />

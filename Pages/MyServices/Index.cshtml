@@ -1,0 +1,32 @@
+﻿@page
+@model ServiceFinder.Pages.MyServices.IndexModel
+@inject Repos.SubscriptionRepo _SubscriptionRepo
+@inject UserManager<ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "My Services";
+    ViewData["PageMode"] = "My Services";
+    var user = await UserManager.GetUserAsync(User);
+}
+
+<h1 class="bi bi-building-gear"> @ViewData["Title"]</h1>
+<p class="fw-semibold m-0">
+    Explore the comprehensive list of services you offer:
+</p>
+<hr />
+@if (user != null && (user.ServiceProviderType == ServiceProviderType.RegisteredTrader || user.ServiceProviderType == ServiceProviderType.Freelancer))
+{
+    @if (await _SubscriptionRepo.IsUserAllowed(user.Id, SubscriptionFunctions.PostService))
+    {
+        <p>
+            <a asp-page="/Services/Create" class="bi bi-building-add h-100 btn btn-primary"> Post a new service</a>
+        </p>
+    }
+    else
+    {
+        <p class="text-danger">
+            Your existing subscription does not permit additional service postings. Consider upgrading your subscription to unlock the ability to post more services.
+        </p>
+    }
+}
+
+<partial name="Partials/Service/_List" model="Model.Services" />

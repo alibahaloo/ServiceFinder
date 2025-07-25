@@ -1,0 +1,37 @@
+﻿@page
+@model AccessDeniedModel
+@inject UserManager<ApplicationUser> UserManager
+@inject ServiceFinder.Repos.SupportTicketRepo SupportTicketRepo
+@{
+    var user = await UserManager.GetUserAsync(User);
+    ViewData["Title"] = "Access denied";
+}
+
+<header>
+    @if (user?.Email != null && user?.UserType == UserAccountRoles.ServiceProvider && Model.ReturnUrl.Contains("MyServices"))
+    {
+        <h1 class="text-danger">Account Not Verified</h1>
+        <hr />
+
+        var supportTicket = await SupportTicketRepo.GetSupportTicketByEmail(user.Email);
+        @if (supportTicket != null)
+        {
+            <p class="text-danger fw-semibold">Your account is not verified yet and is being processed. You won't have access to Service Provider functionalities until your account is verified.</p>
+            <p>Our records show that you've already submitted a access request. You can check the status <a href="/SupportTickets/Details?Id=@supportTicket.Id">here</a>. Our admins are reviewing and will be in touch with you.</p>
+            <p>If you have any questions or need assistance during the process, please don't hesitate to <a href="/ContactUs">contact us</a>. We're here to help!</p>
+        }
+        else
+        {
+            <p class="text-danger fw-semibold">Your account is not verified. You won't have access to Service Provider functionalities until your account is verified.</p>
+            <p>We don't have any records of your access request submission. You can submit one <a href="/Identity/Account/RegisterConfirmation?email=@user.Email"> here</a>.</p>
+            <p>Our admin team will review your request, and upon approval, you will receive a notification via email. Once approved, you can start posting your services on our website.</p>
+            <p>If you have any questions or need assistance during the process, please don't hesitate to <a href="/ContactUs">contact us</a>. We're here to help!</p>
+        }
+
+    } else
+    {
+        <h1 class="text-danger">Access Denied</h1>
+        <hr />
+        <p class="text-danger">You do not have access to this resource.</p>
+    }
+</header>

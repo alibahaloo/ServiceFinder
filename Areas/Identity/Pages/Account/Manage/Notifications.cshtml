@@ -1,0 +1,36 @@
+﻿@page
+@model ServiceFinder.Areas.Identity.Pages.Account.Manage.NotificationsModel
+@{
+    ViewData["Title"] = "Notifications";
+    ViewData["ActivePage"] = ManageNavPages.Notifications;
+
+    Dictionary<NotificationFunction, string> NotificationLabels = new Dictionary<NotificationFunction, string>
+    {
+        { NotificationFunction.BookingCreated, "Booking Created: When a new booking is made" },
+        { NotificationFunction.BookingUpdated, "Booking Updated: When you have a status update on your bookings" },
+        { NotificationFunction.MessageReceived, "Message Received: When you have a new message in a thread (e.g. with a service, on a booking, on a support ticket)" },
+        { NotificationFunction.SupportTicketCreated, "Support Ticket Created: When you submit a new support ticket" },
+        { NotificationFunction.SupportTicketUpdated, "Support Ticket Updated: When you have a status update on your support ticket" },
+        { NotificationFunction.ReviewsReceived, "Review Received: When a customer leaves a review on one of your posted services" },
+    };
+}
+
+<h2>Manage Your Notifications</h2>
+<partial name="_StatusMessage" for="StatusMessage" />
+<form method="post">
+    <div class="row">
+        <div class="col-md-12">
+            @foreach (NotificationFunction function in Enum.GetValues(typeof(NotificationFunction)))
+            {
+                bool isChecked = Model.NotificationValues.TryGetValue(function, out var value) ? value : true;
+                string label = NotificationLabels.ContainsKey(function) ? NotificationLabels[function] : function.ToString();
+
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="@function" name="selectedNotifications" value="@function" @(isChecked ? "checked" : "")>
+                    <label class="form-check-label" for="@function">@label</label>
+                </div>
+            }
+            <partial name="Partials/Buttons/_CreatePartial" />
+        </div>
+    </div>
+</form>

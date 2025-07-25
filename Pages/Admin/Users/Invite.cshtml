@@ -1,0 +1,42 @@
+﻿@page
+@model ServiceFinder.Pages.Admin.Users.InviteModel
+@{
+    ViewData["Title"] = "Invite User";
+}
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+@if (Model.Retry)
+{
+    <p class="fst-italic text-info" style="margin: 0">Records indicate that an invitation has already been sent to this email address.</p>
+    <p class="fst-italic text-info" style="margin: 0">Number of retries so far: @Model.Invitation.RetryCount</p>
+    <p class="fst-italic text-info" style="margin: 0">Would you like to send again?</p>
+    <div class="row">
+        <div class="col-md-4">
+            <form method="post" asp-page-handler="Retry">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Invitation.Id" />
+                <input type="hidden" asp-for="Invitation.EmailAddress" />
+                <partial name="Partials/Buttons/_SendPartial" />
+            </form>
+        </div>
+    </div>
+} else
+{
+    <p class="fst-italic" style="margin: 0">Enter a valid Email address to send the invitation to</p>
+    <div class="row">
+        <div class="col-md-4">
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Invitation.EmailAddress" class="form-control" aria-required="true" />
+                    <label asp-for="Invitation.EmailAddress">Email</label>
+                    <span asp-validation-for="Invitation.EmailAddress" class="text-danger"></span>
+                </div>
+                <partial name="Partials/Buttons/_SendPartial" />
+            </form>
+        </div>
+    </div>
+}
+
+

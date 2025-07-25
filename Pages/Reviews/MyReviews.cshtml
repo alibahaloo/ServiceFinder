@@ -1,0 +1,31 @@
+﻿@page
+@model ServiceFinder.Pages.Reviews.MyReviewsModel
+@inject UserManager<ApplicationUser> _UserManager
+@{
+    ViewData["Title"] = "My Reviews";
+    ViewData["PageMode"] = "My Reviews";
+    var user = await _UserManager.GetUserAsync(User);
+}
+
+<h1 class="bi bi-hand-thumbs-up"> My Reviews</h1>
+@if (user?.UserType == UserAccountRoles.ServiceProvider)
+{
+    <p class="fw-semibold m-0">
+        Discover the comprehensive list of reviews for services under your ownership:
+    </p>
+}
+else
+{
+    <p class="fw-semibold m-0">
+        Explore the complete list of reviews submitted by you:
+    </p>
+}
+<hr />
+
+<partial name="Partials/Review/_List" model="Model.Reviews" />
+
+@{
+    var paginationModel = new Utility.ListPages { PageCount = Model.PageCount, Url = "MyReviews" };
+}
+
+<partial name="_PaginationPartial" model="paginationModel" />

@@ -1,0 +1,208 @@
+﻿@model IList<Data.Service>
+@inject Repos.ServiceRepo _ServiceRepo
+@inject Repos.ReviewRepo _ReviewRepo
+@inject Repos.BookingRepo _BookingRepo
+@inject UserManager<ApplicationUser> _UserManager
+@{
+    var user = await _UserManager.GetUserAsync(User);
+}
+<style>
+    .table td {
+        background-color: transparent;
+    }
+</style>
+@if (Model.Count > 0)
+{
+    <div class="row row-cols-1 row-cols-md-2 g-2 m-1">
+    @foreach (var item in Model)
+    {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-10">
+                                <div class="row">
+                                    <div class="d-flex align-items-center" style="width: 110px">
+                                        @{
+                                            string? imgSrc;
+                                        }
+                                        @if (item.ServiceProvider.ServiceProviderType == ServiceProviderType.Freelancer)
+                                        {
+                                            if (item.ServiceProvider.ProfileURL == null)
+                                            {
+                                                imgSrc = "/images/system/blank-profile-picture.png";
+                                            }
+                                            else
+                                            {
+                                                imgSrc = item.ServiceProvider.ProfileURL;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if (item.LogoUrl == null)
+                                            {
+                                                imgSrc = "/images/system/FS-Logo-Square.png";
+                                            }
+                                            else
+                                            {
+                                                imgSrc = item.LogoUrl;
+                                            }
+                                        }
+
+                                        <img src="@imgSrc" class="img-fluid rounded mx-auto" alt="Company Logo" width="100" height="100">
+                                    </div>
+                                    <div class="col">
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <a href="/Services/Details?Id=@item.Id">
+                                                    <h1 class="me-2" style="display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; -webkit-line-clamp: 1;">@item.Name</h1>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            @if (item.ServiceProvider.ServiceProviderType == ServiceProviderType.RegisteredTrader)
+                                            {
+                                                <div class="col-6">
+                                                    <small class="bi bi-shield-check d-inline p-1 my-1 bg-success text-dark small fw-bold"> Licensed Trader</small>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="col-12">
+                                                    <small class="text-success bi bi-patch-check my-1 fw-bold"> Verified Freelancer</small>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                @{
+                                                    var reviewCount = await _ReviewRepo.GetCountByServiceAsync(item.Id);
+                                                    var averageRating = Math.Round(await _ReviewRepo.GetAverageRatingForServiceAsync(item.Id), 1);
+
+                                                    int fullStars = (int)averageRating;
+                                                    int halfStar = averageRating - fullStars >= 0.1 ? 1 : 0;
+                                                    int emptyStars = 5 - fullStars - halfStar;
+                                                }
+                                                <div class="align-items-center">
+                                                    @for (int i = 0; i < fullStars; i++)
+                                                    {
+                                                        <small class="bi bi-star-fill"></small>
+                                                    }
+
+                                                    @if (halfStar == 1)
+                                                    {
+                                                        <small class="bi bi-star-half"></small>
+                                                    }
+
+                                                    @for (int i = 0; i < emptyStars; i++)
+                                                    {
+                                                        <small class="bi bi-star"></small>
+                                                    }
+                                                    <small> @averageRating</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                @{
+                                                    int bookingCount = await _BookingRepo.GetCountByServiceAsync(item.Id, BookingStatus.Confirm);
+                                                }
+                                                <small class="bi bi-calendar-check">
+                                                    <span> @bookingCount Confirmed Bookings</span>
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="bi bi-calendar">
+                                                    <span> Active since: @item.CreatedAt.ToShortDateString()</span>
+                                                </small>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="bi bi-hand-thumbs-up">
+                                                    <span> @reviewCount Review(s)</span>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                @if (user != null && await _ServiceRepo.IsUserOwnerAsync(user.Id, item.Id) || user?.UserType == UserAccountRoles.Admin)
+                                {
+                                    <a asp-page="/Services/Edit" asp-route-id="@item.Id" class="bi bi-pencil-square btn btn-warning btn-sm m-1"></a>
+                                    <a asp-page="/Services/Delete" asp-route-id="@item.Id" class="bi bi-trash btn btn-danger btn-sm m-1"></a>
+                                }
+                                @if (user != null && await _ServiceRepo.IsUserOwnerAsync(user.Id, item.Id))
+                                {
+                                    <a asp-page="/MyServices/UnavailableDate" asp-route-serviceId="@item.Id" class="bi bi-calendar-week btn btn-sm btn-info m-1"></a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class=" lead col-12" style="display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; -webkit-line-clamp: 2;">
+                            @item.Description 
+                        </div>
+                        <a href="/Services/Details?Id=@item.Id" class="small fst-italic">Read More ...</a>
+
+                        <dl class="row">
+                            <dt class="col-md-3">
+                                Hourly Rate:
+                            </dt>
+                            <dd class="col-md-9">
+                                @item.HourlyRate CAD
+                            </dd>
+                            <dt class="col-md-3">
+                                Categories:
+                            </dt>
+                            <dd class="col-md-9">
+                                @foreach (var serviceCategory in item.ServiceCategories)
+                                {
+                                    <span>@serviceCategory.Category.Name, </span>
+                                }
+                            </dd>
+                            <dt class="col-md-3">
+                                Cities:
+                            </dt>
+                            <dd class="col-md-9">
+                                @foreach (var serviceCity in item.ServiceCities)
+                                {
+                                    @if (serviceCity.City.Province != null)
+                                    {
+                                        <span>@serviceCity.City.Name (@serviceCity.City.Province.Name), </span>
+                                    }
+                                }
+                            </dd>
+                        </dl>
+                        @if (user == null || user.UserType != UserAccountRoles.ServiceProvider)
+                        {
+                            <a class="bi bi-calendar-plus btn btn-primary btn-sm" href="../Bookings/Create?serviceId=@item.Id" role="button"> Book This Service</a>
+                            <a class="bi bi-envelope-plus btn btn-primary btn-sm" href="../Messages/Create?serviceId=@item.Id"> Send Message</a>
+                            <a class="bi bi-hand-thumbs-up btn btn-primary btn-sm" href="../Reviews/Create?serviceId=@item.Id" role="button"> Write A Review</a>
+                        }
+                        
+                    </div>
+                    <div class="card-footer">
+                        <small class="text-muted fst-italic d-block">
+                            By: <a href="../Services/Provider?id=@item.ServiceProviderId">@item.ServiceProvider.FullName</a>
+                            @if (item.ServiceProvider.ServiceProviderType == ServiceProviderType.Freelancer)
+                            {
+                                <small class="text-success bi bi-file-person"> Freelancer</small>
+                            }
+                            else
+                            {
+                                <small class="text-success bi bi-buildings"> Registered Trader</small>
+                            }
+                        </small>
+                    </div>
+                </div>
+            </div>
+    }
+    </div>
+} else
+{
+    <hr />
+    <div class="alert alert-info fw-semibold text-uppercase" role="alert">
+        No services to display!
+    </div>
+}
+

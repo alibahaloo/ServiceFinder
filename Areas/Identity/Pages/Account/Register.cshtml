@@ -1,0 +1,156 @@
+﻿@page
+@model RegisterModel
+@inject SignInManager<ApplicationUser> SignInManager
+@{
+    ViewData["Title"] = "Register New Account";
+}
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+@if (SignInManager.IsSignedIn(User))
+{
+    <h3 class="text-danger">You're already signed in!</h3>
+    <p class="text-danger">You cannot register for a new account while signed in.</p>
+} else
+{
+    <div class="d-flex">
+        <div>
+            <p class="fw-semibold lead">
+                Register for a complimentary account today and unlock a multitude of benefits:
+                <ul>
+                    <li>
+                        <strong>For Customers:</strong> Explore, message, and seamlessly book services directly from the platform. Share your experiences by leaving reviews.
+                    </li>
+                    <li>
+                        <strong>For Service Providers:</strong> Showcase your services, share sample work images, receive booking requests, and engage in direct communication with your customers—all from the platform.
+                    </li>
+                </ul>
+            </p>
+
+        </div>
+        <div class="ms-auto ">
+            <p class="small m-0 p-0 fw-semibold">
+                Already have an account? <a class="d-block" href="/Identity/Account/Login">Log in here</a>
+            </p>
+        </div>
+    </div>
+    <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+        <div class="row">
+            <div class="col-md-4">
+                
+                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>                
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.FullName" class="form-control" aria-required="true" placeholder="John Doe" />
+                    <label asp-for="Input.FullName">Full Name</label>
+                    <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <label asp-for="Input.Email">Email</label>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                    <label asp-for="Input.Password">Password</label>
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                    <label asp-for="Input.ConfirmPassword">Confirm Password</label>
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.PhoneNumber" class="form-control" aria-required="true" placeholder="5551234567" />
+                    <label asp-for="Input.PhoneNumber">Phone Number</label>
+                    <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.AddressLine1" class="form-control" aria-required="true" placeholder="123 - 45th Street" />
+                    <label asp-for="Input.AddressLine1">Address Line 1</label>
+                    <span asp-validation-for="Input.AddressLine1" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.AddressLine2" class="form-control" aria-required="false" placeholder="optional" />
+                    <label asp-for="Input.AddressLine2">Address Line 2 (optional)</label>
+                    <span asp-validation-for="Input.AddressLine2" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.PostalCode" class="form-control" aria-required="true" placeholder="optional" />
+                    <label asp-for="Input.PostalCode">Postal Code</label>
+                    <span asp-validation-for="Input.PostalCode" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <select asp-for="Input.CityId" class="form-control" asp-items="ViewBag.CityId"></select>
+                    <label asp-for="Input.CityId" class="control-label"></label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="text-center">
+                    <img src="/images/system/we-want-you.jpg" class="rounded img-fluid mx-auto mb-4" alt="We Want You" style="width: 50%">
+                </div>
+                <fieldset>
+                    <legend>Account Type</legend>
+                    @if (Model.Type == null)
+                    {
+                        @foreach (var role in UserAccountRoles.GetList())
+                        {
+                            
+                            if (role == UserAccountRoles.Admin) continue;
+                            string id = "Type" + role.Replace(" ", "");
+                            if (role == UserAccountRoles.Customer)
+                            {
+                                <input class="btn-check" type="radio" name="Type" id="@id" value="@role" checked="checked" />
+                            }
+                            else
+                            {
+                                <input class="btn-check" type="radio" name="Type" id="@id" value="@role" />
+                            }
+                            <label class="btn btn-outline-primary" for=@id>@role</label>
+                        }
+                    }
+                    else
+                    {
+                        @foreach (var role in UserAccountRoles.GetList())
+                        {
+                            if (role == UserAccountRoles.Admin) continue;
+                            string id = "Type" + role.Replace(" ", "");
+
+                            if (role == Model.Type)
+                            {
+                                <input class="btn-check" type="radio" name="Type" id="@id" value="@role" checked="checked" />
+                            }
+                            else
+                            {
+                                <input class="btn-check" type="radio" name="Type" id="@id" value="@role" />
+                            }
+                            <label class="btn btn-outline-primary" for=@id>@role</label>
+                        }
+                    }
+                </fieldset>
+                
+                <div class="small fst-italic mt-2">
+                <p>By registering for an account on our website, you agree to receive email communications from us. These communications may include but are not limited to:</p>
+
+                <ul>
+                    <li>Account confirmation emails.</li>
+                    <li>Password reset instructions.</li>
+                    <li>Notifications when booking a service.</li>
+                    <li>Notifications when receiving new messages from service providers you contact</li>
+                </ul>
+
+                <p>We use email as a means to securely communicate with you about your account and to provide you with essential information. You can manage your email preferences and opt-out of certain types of communication within your account settings.</p>
+
+                <p>If you no longer wish to receive email communications from us, you have the option to opt out by deleting your account. Please review our <a href="/Privacy">Privacy Policy</a> to learn more about how we handle your data and your rights regarding email communications. If you have any questions or concerns, please contact our support team.</p>
+                </div>
+
+                <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+            </div>
+        </div>
+    </form>
+}
+
+<hr />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,85 @@
+﻿@page
+@model ServiceFinder.Pages.SupportTickets.DetailsModel
+@inject UserManager<ApplicationUser> _UserManager
+@inject Repos.SupportTicketRepo _SupportTicketRepo
+@{
+    ViewData["Title"] = "Support Ticket";
+    var curUser = await _UserManager.GetUserAsync(User);
+}
+
+<h1 class="bi bi-question-square"> @ViewData["Title"]</h1>
+
+<hr />
+<div class="row" data-masonry='{"percentPosition": true }'>
+    <div class="col-sm-6 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title text-uppercase">Details</h3>
+                <hr />
+                <partial name="Partials/SupportTicket/_DetailsCard" model="@Model.SupportTicket" />
+                <hr />
+                @if (curUser != null && curUser.UserType == UserAccountRoles.Admin && Model.SupportTicket.IsAccessRequest && Model.SupportTicket.Status == SupportTicketStatus.Open)
+                {
+                    <div class="alert alert-warning fw-semibold text-uppercase" role="alert">
+                        This will determine whether this service provider can post their services.
+                    </div>
+                    <form method="post" asp-page="/Admin/Users/Index" asp-page-handler="Verify" style="display: inline;">
+                        <input type="hidden" name="Id" value="@Model.SupportTicket.User.Id" />
+                        <input type="hidden" name="command" value="verify" />
+                        <button type="submit" class="bi bi-check-square btn btn-success"> Approve</button>
+                    </form>
+
+                    <form method="post" asp-page="/Admin/Users/Index" asp-page-handler="Verify" style="display: inline;">
+                        <input type="hidden" name="Id" value="@Model.SupportTicket.User.Id" />
+                        <input type="hidden" name="command" value="deny" />
+                        <button type="submit" class="bi bi-x-square btn btn-danger"> Reject</button>
+                    </form>
+                }
+                else if (curUser != null && !Model.SupportTicket.IsAccessRequest && Model.SupportTicket.Status == SupportTicketStatus.Open)
+                {
+                    <div class="alert alert-warning fw-semibold text-uppercase" role="alert">
+                        This will close this support ticket. No further messages can be sent in the thread.
+                    </div>
+                    <form method="post">
+                        <input type="hidden" asp-for="SupportTicket.Id" />
+                        <input type="hidden" name="status" value="@Data.SupportTicketStatus.Resolved" />
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <span class="fw-bold text-uppercase">Respond: </span>
+                            </div>
+                            <div class="col-md-9">
+                                <button type="submit" class="bi bi-check btn btn-primary"> Mark as Resolved</button>                                
+                            </div>
+                        </div>                        
+                    </form>
+                    
+                }
+
+                @if (curUser?.Email != null && await _SupportTicketRepo.IsUserOwnerAsync(curUser.Email, Model.SupportTicket.Id)) //Non admin (owner) can edit
+                {
+                    @if (Model.SupportTicket.Status == SupportTicketStatus.Open)
+                    {
+                        <hr />
+                        <a asp-page="./Edit" asp-route-id="@Model.SupportTicket.Id" class="bi bi-pencil-square btn btn-warning"> Edit this ticket</a>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning fw-semibold text-uppercase" role="alert">
+                            This support ticket is resolved. No further edits can be done.
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+    @if (Model.SupportTicket.Status == SupportTicketStatus.Open)
+    {
+        <partial name="Partials/Messages/_ResourceComms" model="new Data.InputModels.Message { ResourceId = Model.SupportTicket.Id, ResourceType = MessageResourceType.SupportTicket, ThreadId = Model.MessageThread?.Id}" />
+    }
+    else
+    {
+        <partial name="Partials/Messages/_ResourceComms" model="new Data.InputModels.Message { ResourceId = Model.SupportTicket.Id, ResourceType = MessageResourceType.SupportTicket, ThreadId = Model.MessageThread?.Id, IsEnabled = false}" />
+    }
+
+</div>
